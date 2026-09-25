@@ -92,8 +92,35 @@ export function countRepeats(message, history) {
   ).length;
 }
 
+// ---- Real-market sanity checks ---------------------------------------------------------
+const QTY = /(\d+(?:\.\d+)?)\s*(กิโล|โล|กก|kg|kilo)/i;
+const CONFIRM = /(ตกลง|โอเค|เอาเลย|เอาตามนั้น|จัดไป|ซื้อเลย|ได้ครับ|ได้ค่ะ|ได้เลย|เอาครับ|เอาค่ะ|เอาจ้ะ|\bok\b|okay|deal|i'?ll take|take it|sounds good|let'?s do it|\byes\b|\byep\b|\bsure\b|\bfine\b)/i;
+
+// The per-kilo price the player is offering in this message, if any.
+// "300 for 3 kilos" -> 100. Numbers that are the quantity itself are ignored.
+export function playerOffer(message, maxPrice) {
+  const qm = message.match(QTY);
+  const qty = qm ? parseFloat(qm[1]) : 0;
+  const nums = [];
+  for (const m of message.matchAll(/\d+/g)) {
+    if (qm && m.index >= qm.index && m.index < qm.index + qm[0].length) continue;
+    nums.push(parseInt(m[0], 10));
+  }
+  const perKilo = nums.filter((n) => n > 0 && n <= maxPrice);
+  if (perKilo.length) return Math.max(...perKilo);
+  const total = nums.find((n) => n > maxPrice);
+  return total && qty ? Math.round(total / qty) : null;
+}
+
+// Did the player actually confirm buying at `price`? A new, lower offer is not a confirmation.
+export function isConfirmation(message, price, maxPrice) {
+  if (!CONFIRM.test(message)) return false;
+  const offer = playerOffer(message, maxPrice);
+  return offer == null || offer >= price;
+}
+
 // Never trust the model blindly: enforce the JSON contract and the price rules server-side.
-function sanitizeResult(raw, { cfg, message, state, repeatLvl = 0 }) {
+function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 }) {
   const lang = state.lang; // fixed by the game mode the player picked
 
   let price = Math.round(Number(raw?.current_price));
@@ -101,9 +128,21 @@ function sanitizeResult(raw, { cfg, message, state, repeatLvl = 0 }) {
   price = Math.min(price, state.price + 10, cfg.maxPrice);
   price = Math.max(price, cfg.floorPrice);
 
-  const deal_closed = raw?.deal_closed === true;
-  let deal_failed = !deal_closed && raw?.deal_failed === true;
   let npc_mood = MOODS.includes(raw?.npc_mood) ? raw.npc_mood : 'neutral';
+
+  // Like a real vendor: never quote below what the buyer just offered...
+  const offer = playerOffer(message, cfg.maxPrice);
+  if (offer && offer <= state.price && price < offer) price = offer;
+  // If she already said yes to the buyer's previous offer, pushing for more gets at most 3 baht.
+  const lastPlayer = [...history].reverse().find((h) => h.role === 'player' && !h.text.startsWith('('));
+  const prevOffer = lastPlayer ? playerOffer(lastPlayer.text, cfg.maxPrice) : null;
+  if (prevOffer != null && prevOffer >= state.price) price = Math.max(price, state.price - 3);
+  // ...and only raise the price when she is actually annoyed.
+  if (price > state.price && (npc_mood === 'neutral' || npc_mood === 'happy')) price = state.price;
+
+  // Agreeing to an offer is not a sale: the buyer has to confirm.
+  const deal_closed = raw?.deal_closed === true && isConfirmation(message, price, cfg.maxPrice);
+  let deal_failed = !deal_closed && raw?.deal_failed === true;
   if (deal_closed && npc_mood === 'angry') npc_mood = 'happy';
 
   // Asking the same thing again: no discount, and she gets more and more fed up.

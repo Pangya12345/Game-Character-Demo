@@ -18,7 +18,7 @@ const LINES = {
   th: {
     rude: ['พูดจาดี ๆ หน่อยพ่อคุณ! ปากแบบนี้ป้าขึ้นเป็น {price} บาทเลย', 'โอ๊ย ปากเสียแบบนี้ไม่ขายให้ง่าย ๆ หรอก {price} บาท จะเอาไม่เอา!'],
     lowball: ['{offer} บาท?! ไปเก็บเองจากต้นไป๊! ต้นทุนป้ายังไม่พอเลย', 'ล้อเล่นใช่ไหม {offer} บาท ค่าน้ำมันรถป้ายังไม่พอเลยลูก!'],
-    acceptOffer: ['เฮ้อ... {price} บาทก็ได้ เห็นแก่ความน่ารักหรอกนะ เดี๋ยวป้าห่อให้', 'เอ้า ตกลง {price} บาทจ้ะ ป้าแถมลูกเล็กให้อีกลูกด้วย'],
+    acceptOffer: ['เฮ้อ... {price} บาทก็ได้ เห็นแก่ความน่ารักหรอกนะ จะเอาเลยไหมล่ะ?', 'ก็ได้ ๆ {price} บาท ตกลงเอาเลยไหมจ๊ะ ป้าจะได้ห่อให้', '{price} ก็ได้จ้ะ แล้วจะเอากี่โลล่ะ?'],
     deal: ['ตกลงกิโลละ {price} บาทนะจ๊ะ เดี๋ยวป้าเลือกลูกสวย ๆ ให้เลย', 'ได้เลยจ้ะ {price} บาท หวานฉ่ำรับรอง กินแล้วต้องกลับมาอีก'],
     counter: [
       '{offer} ไม่ไหวหรอกหนู ป้าให้ {price} บาทละกัน ลดให้แล้วนะ',
@@ -54,7 +54,7 @@ const LINES = {
   en: {
     rude: ["Hey, watch your mouth! Now it's {price}.", "Wow, rude. Fine, {price}. Take it or leave it."],
     lowball: ['{offer} baht? Go pick them off the tree yourself!', "{offer}? That doesn't even cover my gas."],
-    acceptOffer: ["Ugh, fine. {price}. Only 'cause you're sweet. Let me bag 'em up.", "Okay, okay, {price}. I'll even throw in a little one."],
+    acceptOffer: ["Ugh, fine. {price}. So, you want 'em?", "Okay, okay, {price}. Do we have a deal?", '{price} works. How many kilos you want?'],
     deal: ["Deal. {price} a kilo. I'll pick out the good ones for you.", "{price} it is! You'll be back for more, trust me."],
     counter: [
       "{offer} is too low. I can do {price}. That's already a deal.",
@@ -138,14 +138,15 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     mood = 'angry';
     key = 'lowball';
   } else if (offer != null && offer >= price) {
-    closed = true;
+    // offering the asking price (or more) and saying yes = sale; otherwise she asks to confirm
+    closed = RE.accept.test(message);
     mood = 'happy';
-    key = 'deal';
+    key = closed ? 'deal' : 'acceptOffer';
   } else if (offer != null) {
     const step = Math.min(10, 2 + polite * 3 + charm * 2 + reason * 2 + (qty >= 3 ? 3 : qty >= 2 ? 1 : 0));
     const willing = Math.max(cfg.floorPrice, price - step);
     if (offer >= willing) {
-      closed = true;
+      // she agrees to their price but the buyer still has to confirm
       price = offer;
       mood = 'happy';
       key = 'acceptOffer';
