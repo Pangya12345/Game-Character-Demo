@@ -506,7 +506,6 @@ const RULES = {
       <li><b>ห้ามเงียบ:</b> ถ้าไม่พิมพ์เกิน ${cfg.idleSeconds} วินาที ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
       <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
       <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
-      <li>ยิ่งได้ราคาถูก เกรดยิ่งสูง (S / A / B / C)</li>
     </ol>
     <div class="row-btns">
       <button class="pbtn alt" data-back>ย้อนกลับ</button>
@@ -523,7 +522,6 @@ const RULES = {
       <li><b>Don't go quiet:</b> after ${cfg.idleSeconds} seconds of silence the price goes up 5 baht (3 warnings). The 4th time she <b>kicks you out</b> and the deal fails!</li>
       <li><b>No message limit.</b> Keep haggling as long as you like, just don't go quiet!</li>
       <li><b>Win:</b> agree on a price within your budget. <b>Lose:</b> the deal fails, you get kicked out, or you can't afford what you agreed.</li>
-      <li>The cheaper the price, the better your grade (S / A / B / C).</li>
     </ol>
     <div class="row-btns">
       <button class="pbtn alt" data-back>Back</button>
