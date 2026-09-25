@@ -34,18 +34,17 @@ function sanitizeHistory(history) {
     .map((h) => ({ role: h.role, text: h.text.slice(0, 400) }));
 }
 
-export function detectLanguage(text) {
-  const thai = (text.match(/[฀-๿]/g) || []).length;
+// The chosen game mode locks the language: English mode = no Thai letters,
+// Thai mode = must contain Thai (English words mixed in, or just numbers, are fine).
+export function matchesLanguage(text, lang) {
+  const thai = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
   const latin = (text.match(/[A-Za-z]/g) || []).length;
-  if (!thai && !latin) return null;
-  return thai >= latin * 0.5 ? 'th' : 'en';
+  return lang === 'en' ? thai === 0 : thai > 0 || latin === 0;
 }
 
 // Never trust the model blindly: enforce the JSON contract and the price rules server-side.
 function sanitizeResult(raw, { cfg, message, state }) {
-  const lang = raw?.detected_language === 'th' || raw?.detected_language === 'en'
-    ? raw.detected_language
-    : detectLanguage(message) ?? state.lang;
+  const lang = state.lang; // fixed by the game mode the player picked
 
   let price = Math.round(Number(raw?.current_price));
   if (!Number.isFinite(price)) price = state.price;
@@ -91,6 +90,7 @@ export async function negotiate(body, ip = 'unknown') {
     lang: s.lang === 'en' ? 'en' : 'th',
     daySeed: clampInt(s.day_seed, 0, 9999, 0),
   };
+  if (!matchesLanguage(message, state.lang)) return { status: 400, json: { error: 'wrong_language', expected: state.lang } };
   const ctx = { cfg, message, state, history: sanitizeHistory(body.history) };
 
   let raw = null;

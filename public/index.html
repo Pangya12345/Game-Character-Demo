@@ -23,9 +23,9 @@
         <div class="stage">
           <canvas id="scene" aria-label="Pixel-art market with Mae Kha Som Sri and the player"></canvas>
           <div class="hud">
-            <div class="hud-box"><span id="lblMood">Vendor Mood:</span> <b id="moodVal" data-mood="neutral">Neutral</b></div>
+            <div class="hud-box"><span id="lblMood">Mood:</span> <b id="moodVal" data-mood="neutral">Neutral</b></div>
             <div class="hud-mid">
-              <div id="turnVal">Auntie's patience</div>
+              <div id="turnVal">Patience</div>
               <div class="timer" title="Idle timer"><div id="timerBar"></div></div>
               <nav class="hud-btns" aria-label="Game controls">
                 <button data-act="hint">HINT</button>
@@ -34,7 +34,7 @@
               </nav>
             </div>
             <div class="hud-right">
-              <div class="hud-box price"><span id="lblPrice">Current Price:</span> <b id="priceVal">120฿</b>
+              <div class="hud-box price"><span id="lblPrice">Price:</span> <b id="priceVal">120฿</b>
                 <span class="price-pop" id="pricePop"></span>
               </div>
               <div class="hud-wallet" id="walletVal" data-state="ok"></div>
@@ -52,7 +52,7 @@
         </div>
 
         <form class="chatbar" id="chatForm" autocomplete="off">
-          <label for="chatInput" id="lblChat">Chat:</label>
+          <label for="chatInput" id="lblChat">Chat</label>
           <input id="chatInput" maxlength="280" enterkeyhint="send" disabled>
           <button type="submit" id="sendBtn" disabled>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 7.5 15 1 11 15 8 9.5zM8 9.5 15 1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>

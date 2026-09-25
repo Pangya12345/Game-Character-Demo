@@ -187,6 +187,7 @@ button { cursor: pointer; }
 #moodVal[data-mood='happy'] { color: var(--good); }
 #moodVal[data-mood='angry'] { color: var(--bad); }
 #moodVal[data-mood='stressed'] { color: var(--warn); }
+#moodVal[data-mood='confused'] { color: #9fd4ff; }
 .hud-box.price b { color: var(--gold); }
 .hud-box.price.flash-down b { animation: flashGood .8s; }
 .hud-box.price.flash-up b { animation: flashBad .8s; }

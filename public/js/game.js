@@ -28,6 +28,13 @@ const els = {
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+// Same rule as the server: English mode = no Thai letters; Thai mode = must contain Thai.
+function matchesLanguage(text, lang) {
+  const thai = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  return lang === 'en' ? thai === 0 : thai > 0 || latin === 0;
+}
+
 // Several variants per scripted line so the vendor never sounds canned.
 const T = {
   th: {
@@ -36,7 +43,7 @@ const T = {
     patience: 'ความอดทนของแม่ค้า',
     chat: 'พิมพ์แชท:',
     placeholder: 'พิมพ์ต่อราคาได้เลย',
-    moods: { neutral: 'เฉยๆ', happy: 'ดีใจ', angry: 'โกรธ', stressed: 'หงุดหงิด' },
+    moods: { neutral: 'เฉยๆ', happy: 'ดีใจ', angry: 'โกรธ', stressed: 'หงุดหงิด', confused: 'งง' },
     greet: (p) => pick([
       `มะม่วงน้ำดอกไม้กิโลละ ${p} บาทจ้ะ พ่อหนุ่ม ราคานี้ลดไม่ได้แล้วน้า`,
       `เอามะม่วงไหมจ๊ะ หวานฉ่ำ เพิ่งเก็บจากสวนเมื่อเช้า กิโลละ ${p} เท่านั้น`,
@@ -76,6 +83,17 @@ const T = {
     netError: '(สัญญาณหาย... ข้อความยังอยู่ในช่องแชท ลองส่งอีกครั้งนะ)',
     fallback: 'AI ไม่ตอบ ตอนนี้ใช้โหมดสำรองชั่วคราว',
     rateLimited: 'ส่งถี่เกินไป รอสักครู่นะ',
+    wrongLang: 'โหมดภาษาไทย: พิมพ์เป็นภาษาไทยเท่านั้นนะ',
+    // What she says when the player keeps typing in another language (index = strike - 1)
+    wrongLangLines: [
+      () => pick(['หา? พูดอะไรนะ ป้าฟังไม่ออก พูดไทยหน่อยได้ไหมจ๊ะ', 'เอ๊ะ... ภาษาอะไรน่ะ ป้าไม่เข้าใจเลย พูดไทยสิลูก']),
+      () => pick(['อะไรนะ? ป้าไม่ได้เรียนภาษาฝรั่งมานะ พูดไทยเถอะ', 'งงไปหมดแล้ว... ขอเป็นภาษาไทยได้ไหม']),
+      () => pick(['บอกแล้วไงว่าป้าฟังไม่ออก! พูดไทยมาเลย', 'จะแกล้งป้าใช่ไหมเนี่ย พูดไทยสิ!']),
+      (p) => `ยังจะพูดภาษาอื่นอีก! ป้าขึ้นเป็น ${p} บาทเลย พูดไทยมา!`,
+      (p) => `${p} บาท! ครั้งหน้ายังพูดภาษาที่ป้าไม่รู้เรื่อง ป้าไม่ขายแล้วนะ!`,
+    ],
+    wrongLangKick: 'พอเลย! คุยกันไม่รู้เรื่อง ป้าไม่ขายแล้ว ไปเถอะ!',
+    langKickedMsg: 'คุยกันไม่รู้เรื่อง แม่ค้าเลยไม่ขายให้แล้ว ดีลล่ม!',
     win: 'ดีลสำเร็จ!',
     lose: 'ดีลล่ม!',
     perKg: 'บาท/กก.',
@@ -103,12 +121,12 @@ const T = {
     ],
   },
   en: {
-    mood: 'Her Mood:',
+    mood: 'Mood:',
     price: 'Price:',
-    patience: 'Her patience',
-    chat: 'Say:',
-    placeholder: 'Type here to haggle',
-    moods: { neutral: 'Okay', happy: 'Happy', angry: 'Mad', stressed: 'Annoyed' },
+    patience: 'Patience',
+    chat: 'Chat',
+    placeholder: 'Type your message...',
+    moods: { neutral: 'Neutral', happy: 'Happy', angry: 'Angry', stressed: 'Annoyed', confused: 'Confused' },
     greet: (p) => pick([
       `Mangoes! ${p} baht a kilo. That's already a good price.`,
       `Fresh mangoes, picked this morning. ${p} a kilo.`,
@@ -137,41 +155,51 @@ const T = {
       "Forget it. You're just standing there. I'm done, go on!",
       "You're wasting my time. Step aside and let someone else buy!",
     ]),
-    kicked: 'KICKED OUT!',
-    kickedMsg: 'You stayed quiet too long, so she kicked you out. No deal!',
-    wallet: (b, kg, total) => `You have ${b}฿ · ${kg} kg = ${total}฿`,
-    mission: (b, kg) => `Goal: you have <b>${b} baht</b> to buy <b>${kg} kg</b> (${Math.floor(b / kg)}฿/kg or less).`,
-    missionToast: (b, kg) => `💰 You have ${b}฿ for ${kg} kg. Don't go over!`,
-    broke: 'NOT ENOUGH MONEY!',
-    brokeMsg: (total, b) => `You agreed to pay ${total}฿, but you only have ${b}฿...`,
-    leftover: (m) => `${m} baht left over`,
-    netError: "(Couldn't connect. Your message is still there, try again.)",
-    fallback: 'The AI is slow right now, so backup mode is on for a bit',
-    rateLimited: "Whoa, slow down. You're sending too fast",
-    win: 'DEAL!',
-    lose: 'NO DEAL!',
-    perKg: 'baht/kg',
-    saved: (s) => (s > 0 ? `You saved ${s} baht a kilo` : 'You got zero off'),
-    turns: (t) => `${t} messages`,
-    loseMsg: "She won't sell to you. Try a different approach!",
-    again: 'Play again',
-    share: 'Share',
-    copied: 'Copied! Send it to your friends',
-    grades: { S: 'Pro Haggler', A: 'Smooth Talker', B: 'Not Bad', C: 'She Won' },
+    kicked: 'GAME OVER',
+    kickedMsg: 'You were idle too long. Som Sri kicked you out.',
+    wallet: (b, kg, total) => `Budget ${b}฿ · ${kg} kg = ${total}฿`,
+    mission: (b, kg) => `OBJECTIVE: Buy <b>${kg} kg</b> of mangoes with <b>${b}฿</b> (${Math.floor(b / kg)}฿/kg or less).`,
+    missionToast: (b, kg) => `🎯 OBJECTIVE: Buy ${kg} kg with ${b}฿`,
+    broke: 'GAME OVER',
+    brokeMsg: (total, b) => `Not enough money. The deal costs ${total}฿, but your budget is ${b}฿.`,
+    leftover: (m) => `Money left: ${m}฿`,
+    netError: 'Connection error. Please try again.',
+    fallback: 'AI is busy. Switched to offline mode.',
+    rateLimited: 'Too many messages. Please wait a moment.',
+    wrongLang: 'English mode: please type in English only.',
+    wrongLangLines: [
+      () => pick(["Huh? Sorry, I don't understand that. English, please?", 'Wait, what was that? I only speak English here.']),
+      () => pick(["Still not getting it. Can you say it in English?", 'I have no idea what that means. English, please.']),
+      () => pick(["I told you, I don't understand! English, please.", 'Are you messing with me? Say it in English!']),
+      (p) => `Okay, now you're just wasting my time. It's ${p} now. English!`,
+      (p) => `${p}! One more time and I'm not selling to you.`,
+    ],
+    wrongLangKick: "That's it. We can't even talk. No sale, go on!",
+    langKickedMsg: 'You kept using the wrong language, so she gave up on you.',
+    win: 'YOU WIN!',
+    lose: 'GAME OVER',
+    perKg: '฿/kg',
+    saved: (s) => (s > 0 ? `Discount: ${s}฿/kg` : 'Discount: none'),
+    turns: (t) => `Messages: ${t}`,
+    loseMsg: 'The deal failed. Try a different strategy!',
+    again: 'PLAY AGAIN',
+    share: 'SHARE',
+    copied: 'Copied to clipboard!',
+    grades: { S: 'Master Haggler', A: 'Great Deal', B: 'Good Deal', C: 'Fair Deal' },
     shareText: (p, s, m) => `I got Auntie Som Sri's mangoes down to ${p}฿ a kilo (${s}฿ off) and still had ${m}฿ left. Think you can beat that?`,
-    log: 'Chat history',
-    logEmpty: 'Nothing yet',
+    log: 'Chat Log',
+    logEmpty: 'No messages yet',
     you: 'You',
     vendor: 'Som Sri',
     hints: [
-      'Be nice. She gives better deals to polite people.',
-      'Give her a reason, like another stand is cheaper or money is tight.',
-      'Buying more kilos gets you a bigger discount.',
-      'Chat with her a bit before you ask for a lower price.',
-      'Going way too low just makes her annoyed.',
-      "She remembers what you said. The same trick won't work twice.",
-      "Don't go quiet. The price goes up, and she'll kick you out!",
-      "She doesn't know how much money you have. Try telling her.",
+      'TIP: Being polite gets you better prices.',
+      'TIP: Give a good reason, like a cheaper stall nearby or a tight budget.',
+      'TIP: Buy more kilos for a bigger discount.',
+      'TIP: Build rapport before asking for a lower price.',
+      'TIP: Lowball offers only annoy her.',
+      "TIP: She remembers everything. Tricks won't work twice.",
+      'TIP: Staying idle raises the price. Too long and you get kicked out.',
+      "TIP: She doesn't know your budget. Try telling her.",
     ],
   },
 };
@@ -201,6 +229,7 @@ const S = {
   history: [],
   idleLeft: 25,
   idleStrikes: 0,
+  wrongLang: 0,
   mission: MISSIONS[0],
   gen: 0, // bumps on every (re)start so stale async replies are ignored
 };
@@ -385,6 +414,49 @@ async function onIdle() {
   }
 }
 
+/* ---------------- Wrong language ---------------- */
+
+// Typing in the other language never reaches the AI. Som Sri reacts on the spot:
+// confused (1-2), annoyed (3), angry + price up (4-5), then refuses to sell (6).
+async function onWrongLanguage(text) {
+  const gen = S.gen;
+  S.busy = true;
+  setInputEnabled(false);
+  els.input.value = '';
+  renderPlayerBubble(text, false);
+  scene.hop();
+  S.wrongLang += 1;
+  S.idleStrikes = 0;
+  resetIdle();
+  const lines = L().wrongLangLines;
+  const n = S.wrongLang;
+  if (n === 1) toast(L().wrongLang, 3000);
+  if (n <= 2) {
+    setMood('confused');
+  } else if (n === 3) {
+    setMood('stressed');
+  } else if (n <= lines.length) {
+    setMood('angry');
+    sfx.angry();
+    setPrice(Math.min(S.price + 5, cfg.maxPrice));
+  } else {
+    S.over = true;
+    setMood('angry');
+    sfx.angry();
+    await npcSay(L().wrongLangKick);
+    if (gen === S.gen) endGame('langKicked');
+    return;
+  }
+  await npcSay(lines[n - 1](S.price));
+  if (gen !== S.gen) return;
+  S.busy = false;
+  resetIdle();
+  if (!S.over) {
+    setInputEnabled(true);
+    els.input.focus();
+  }
+}
+
 /* ---------------- Sending a message ---------------- */
 
 function setInputEnabled(on) {
@@ -395,6 +467,7 @@ function setInputEnabled(on) {
 async function send() {
   const text = els.input.value.trim();
   if (!S.started || S.over || S.busy || !text) return;
+  if (!matchesLanguage(text, S.lang)) return onWrongLanguage(text);
 
   const gen = S.gen;
   S.busy = true;
@@ -424,10 +497,6 @@ async function send() {
 
     els.input.value = '';
     S.history.push({ role: 'player', text });
-    if (data.detected_language !== S.lang) {
-      S.lang = data.detected_language;
-      applyLang();
-    }
     if (data.warning === 'llm_error') toast(L().fallback);
     if (data.npc_mood === 'angry' && S.mood !== 'angry') sfx.angry();
     setMood(data.npc_mood);
@@ -440,7 +509,8 @@ async function send() {
     if (gen !== S.gen) return;
     S.turn -= 1;
     renderTurn();
-    showSystem(err.code === 'rate_limited' ? L().rateLimited : L().netError);
+    if (err.code === 'wrong_language') toast(L().wrongLang, 3000);
+    else showSystem(err.code === 'rate_limited' ? L().rateLimited : L().netError);
     console.error(err);
   } finally {
     if (gen === S.gen) {
@@ -496,7 +566,7 @@ const RULES = {
     <h2>กติกาการเล่น</h2>
     <p class="mission">ภารกิจ: คุณมีเงิน <b>${m.budget} บาท</b> ต้องซื้อมะม่วง <b>${m.kg} กิโล</b><br>ราคาเริ่มต้นกิโลละ ${cfg.startPrice} บาท ต้องต่อให้เหลือไม่เกิน <b>${Math.floor(m.budget / m.kg)} บาท/กก.</b></p>
     <ol>
-      <li><b>พิมพ์คุยได้อิสระ</b> แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ</li>
+      <li><b>พิมพ์คุยได้อิสระ</b> แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ (<b>พิมพ์ภาษาไทยเท่านั้น</b> ถ้าพิมพ์ภาษาอื่นแม่ค้าจะงง ถ้าบ่อย ๆ จะโกรธ)</li>
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคา ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
@@ -509,20 +579,20 @@ const RULES = {
       <button class="pbtn" data-start="th">เริ่มเล่น!</button>
     </div>`,
   en: (m) => `
-    <h2>How to play</h2>
-    <p class="mission">You have <b>${m.budget} baht</b> and need <b>${m.kg} kg</b> of mangoes.<br>They start at ${cfg.startPrice} baht a kilo. Get her down to <b>${Math.floor(m.budget / m.kg)} baht a kilo</b> or less.</p>
+    <h2>HOW TO PLAY</h2>
+    <p class="mission"><b>OBJECTIVE:</b> Buy <b>${m.kg} kg</b> of mangoes with a budget of <b>${m.budget}฿</b>.<br>Starting price: ${cfg.startPrice}฿/kg. Target: <b>${Math.floor(m.budget / m.kg)}฿/kg</b> or less.</p>
     <ol>
-      <li><b>Type whatever you want.</b> Som Sri is an AI, so she actually reacts to what you say.</li>
-      <li><b>Want a lower price?</b> Be nice, give her a good reason, buy more, make her laugh, or try some haggling tricks.</li>
-      <li><b>She gets annoyed</b> if you go way too low (like 10 baht) or act rude. <b>Cuss at her or insult her and the deal is off right away!</b></li>
-      <li>She <b>remembers</b> what you said, so the same trick won't work twice. She doesn't know how much money you have unless you tell her.</li>
-      <li><b>Don't go quiet.</b> If you don't say anything for ${cfg.idleSeconds} seconds, the price goes up 5 baht (3 warnings). The 4th time, she <b>kicks you out</b>!</li>
-      <li><b>No message limit.</b> Keep going as long as you want.</li>
-      <li><b>You win</b> if you make a deal you can afford. <b>You lose</b> if the deal falls through, you get kicked out, or you agree to a price you can't pay.</li>
+      <li><b>Chat freely</b> in <b>English only</b>. Som Sri is an AI and responds to what you say. Other languages confuse her, and she gets mad if you keep trying.</li>
+      <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
+      <li><b>Lowball offers</b> and rudeness will annoy her. <b>Insults end the deal immediately.</b></li>
+      <li><b>She remembers everything.</b> Repeated tricks won't work. She doesn't know your budget unless you tell her.</li>
+      <li><b>Idle timer:</b> every ${cfg.idleSeconds}s of silence raises the price by 5฿. After 3 warnings, you get kicked out.</li>
+      <li><b>No message limit.</b></li>
+      <li><b>WIN:</b> close a deal within your budget. <b>LOSE:</b> the deal fails, you get kicked out, or you can't afford the price.</li>
     </ol>
     <div class="row-btns">
-      <button class="pbtn alt" data-back>Back</button>
-      <button class="pbtn" data-start="en">Let's go!</button>
+      <button class="pbtn alt" data-back>BACK</button>
+      <button class="pbtn" data-start="en">START</button>
     </div>`,
 };
 
@@ -538,7 +608,7 @@ async function startGame(lang, { newMission = false } = {}) {
   if (newMission) S.mission = pickMission();
   finishTyping();
   // daySeed picks a different "day at the market" for the AI each game
-  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, gen: S.gen + 1, daySeed: Math.floor(Math.random() * 1000) });
+  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, wrongLang: 0, gen: S.gen + 1, daySeed: Math.floor(Math.random() * 1000) });
   setPrice(cfg.startPrice, { silent: true });
   applyLang();
   setMood('neutral');
@@ -575,8 +645,8 @@ function endGame(result) {
         </div>`);
     } else {
       sfx.lose();
-      const title = { broke: L().broke, kicked: L().kicked }[result] ?? L().lose;
-      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: L().kickedMsg }[result] ?? L().loseMsg;
+      const title = { broke: L().broke, kicked: L().kicked, langKicked: L().lose }[result] ?? L().lose;
+      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: L().kickedMsg, langKicked: L().langKickedMsg }[result] ?? L().loseMsg;
       showOverlay(`
         <h1>${title}</h1>
         <p>${msg}</p>

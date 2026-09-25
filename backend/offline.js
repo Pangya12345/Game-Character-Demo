@@ -1,7 +1,6 @@
 // Rule-based stand-in for the LLM. Used when no API key is configured, or when the API call fails,
 // so the game is always playable. It is intentionally simpler than the real AI.
 
-const THAI = /[฀-๿]/;
 const NUM_WORDS = { หนึ่ง: 1, สอง: 2, สาม: 3, สี่: 4, ห้า: 5, หก: 6, สิบ: 10, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, ten: 10 };
 
 const RE = {
@@ -105,7 +104,7 @@ function parseOffer(text, qtySpan) {
 }
 
 export function offlineReply({ cfg, message, state, history = [] }) {
-  const lang = THAI.test(message) ? 'th' : /[a-z]/i.test(message) ? 'en' : state.lang;
+  const lang = state.lang;
   const L = LINES[lang];
   const { qty, span } = parseQty(message);
   const offer = parseOffer(message, span);

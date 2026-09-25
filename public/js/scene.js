@@ -259,6 +259,9 @@ function drawFace(c, x, y, f, { mood, talking, blink, t }) {
   } else if (mood === 'stressed') {
     P(lx - 1, by, 1, 1, f.brow); P(lx, by - 1, 2, 1, f.brow);
     P(rx + 1, by, 1, 1, f.brow); P(rx - 1, by - 1, 2, 1, f.brow);
+  } else if (mood === 'confused') {
+    P(lx - 1, by - 1, 2, 1, f.brow); // one eyebrow raised
+    P(rx, by, 2, 1, f.brow);
   } else {
     P(lx - 1, by, 2, 1, f.brow);
     P(rx, by, 2, 1, f.brow);
@@ -281,12 +284,27 @@ function drawFace(c, x, y, f, { mood, talking, blink, t }) {
     P(mx, my, mw, 1); P(mx - 1, my + 1); P(mx + mw, my + 1);
   } else if (mood === 'stressed') {
     for (let i = 0; i < mw + 2; i++) P(mx - 1 + i, my + (i % 2));
+  } else if (mood === 'confused') {
+    P(mx + mw - 2, my, 2, 1);
   } else {
     P(mx, my, mw, 1, f.mouthCol);
   }
 }
 
 function moodFx(c, x, y, mood, t) {
+  if (mood === 'confused') {
+    // pixel question mark bobbing above her head
+    const qy = y - 4 + (Math.floor(t / 400) % 2);
+    const col = '#ffffff';
+    R(c, x - 1, qy, 4, 1, col);
+    R(c, x - 2, qy + 1, 1, 2, col);
+    R(c, x + 3, qy + 1, 1, 2, col);
+    R(c, x + 2, qy + 3, 1, 1, col);
+    R(c, x + 1, qy + 4, 1, 2, col);
+    R(c, x + 1, qy + 7, 1, 1, col);
+    R(c, x - 2, qy + 3, 1, 1, '#2a1a12');
+    return;
+  }
   if (mood === 'angry') {
     const s = Math.floor(t / 250) % 2;
     const col = '#e8352a';
