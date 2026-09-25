@@ -85,14 +85,27 @@ const T = {
     rateLimited: 'ส่งถี่เกินไป รอสักครู่นะ',
     wrongLang: 'โหมดภาษาไทย: พิมพ์เป็นภาษาไทยเท่านั้นนะ',
     // What she says when the player keeps typing in another language (index = strike - 1)
+    // She can't understand the player. (p = price, n = a number she did catch, if any)
     wrongLangLines: [
-      () => pick(['หา? พูดอะไรนะ ป้าฟังไม่ออก พูดไทยหน่อยได้ไหมจ๊ะ', 'เอ๊ะ... ภาษาอะไรน่ะ ป้าไม่เข้าใจเลย พูดไทยสิลูก']),
-      () => pick(['อะไรนะ? ป้าไม่ได้เรียนภาษาฝรั่งมานะ พูดไทยเถอะ', 'งงไปหมดแล้ว... ขอเป็นภาษาไทยได้ไหม']),
-      () => pick(['บอกแล้วไงว่าป้าฟังไม่ออก! พูดไทยมาเลย', 'จะแกล้งป้าใช่ไหมเนี่ย พูดไทยสิ!']),
-      (p) => `ยังจะพูดภาษาอื่นอีก! ป้าขึ้นเป็น ${p} บาทเลย พูดไทยมา!`,
-      (p) => `${p} บาท! ครั้งหน้ายังพูดภาษาที่ป้าไม่รู้เรื่อง ป้าไม่ขายแล้วนะ!`,
+      (p, n) => (n ? `${n}? เอ่อ... ${n} อะไรนะ ป้าฟังออกแค่ตัวเลขอะ พูดไทยได้ไหมจ๊ะ` : pick([
+        'ฮะ? พูดอะไรนะ... ป้าฟังฝรั่งไม่ออกหรอกจ้ะ พูดไทยได้ไหม',
+        'โอ๊ย ยูพูดอะไร ป้าไม่เก่งอังกฤษ พูดไทยช้า ๆ ได้ไหมลูก',
+        'เอ่อ... โซรี่ ๆ ป้าไม่รู้เรื่องเลย พูดไทยหน่อยนะ',
+      ])),
+      (p, n) => (n ? `${n} เหรอ? โน ๆ ไม่ได้ ๆ... ที่เหลือป้าไม่รู้เรื่องเลย พูดไทยสิ` : pick([
+        'ไอ... ไอ ดอน สปีค... โอ๊ย ไม่รู้จะพูดยังไง ชี้เอาก็ได้ลูก',
+        'ป้าก็อยากเข้าใจนะ แต่ไม่ได้เรียนมา ลองพูดไทยดูอีกทีสิ',
+        'แม่ค้าร้านข้าง ๆ ที่พูดฝรั่งได้ก็ไม่อยู่ ไม่มีใครแปลให้เลย พูดไทยเถอะนะ',
+      ])),
+      () => pick([
+        'พูดยาวแบบนี้ป้ายิ่งงงเข้าไปใหญ่! พูดไทยมาเถอะ ป้าขอร้อง',
+        'เฮ้อ ป้าเริ่มปวดหัวแล้วนะ คุยกันไม่รู้เรื่องเลย',
+      ]),
+      (p) => `เสียเวลาขายของป้าแล้วนะ! งั้นกิโลละ ${p} ไปเลย อยากต่อก็พูดไทยมา`,
+      (p) => `${p} บาท! ถ้ายังพูดภาษาที่ป้าไม่รู้เรื่องอีก ป้าไม่ขายแล้วนะ`,
     ],
-    wrongLangKick: 'พอเลย! คุยกันไม่รู้เรื่อง ป้าไม่ขายแล้ว ไปเถอะ!',
+    wrongLangKick: 'ไม่ไหวแล้ว ๆ คุยกันไม่รู้เรื่อง ไปหาคนแปลมาก่อนแล้วค่อยมาซื้อนะ!',
+    wrongLangHistory: '(พูดภาษาที่แม่ค้าฟังไม่ออก)',
     langKickedMsg: 'คุยกันไม่รู้เรื่อง แม่ค้าเลยไม่ขายให้แล้ว ดีลล่ม!',
     win: 'ดีลสำเร็จ!',
     lose: 'ดีลล่ม!',
@@ -168,13 +181,25 @@ const T = {
     rateLimited: 'Too many messages. Please wait a moment.',
     wrongLang: 'English mode: please type in English only.',
     wrongLangLines: [
-      () => pick(["Huh? Sorry, I don't understand that. English, please?", 'Wait, what was that? I only speak English here.']),
-      () => pick(["Still not getting it. Can you say it in English?", 'I have no idea what that means. English, please.']),
-      () => pick(["I told you, I don't understand! English, please.", 'Are you messing with me? Say it in English!']),
-      (p) => `Okay, now you're just wasting my time. It's ${p} now. English!`,
-      (p) => `${p}! One more time and I'm not selling to you.`,
+      (p, n) => (n ? `${n}? I got the number, but that's it. Can you say it in English?` : pick([
+        "Sorry, what? Is that Thai? I don't speak Thai.",
+        "Uh... I didn't catch any of that. English, maybe?",
+        'Oh, sorry, I only speak English. Can you try that in English?',
+      ])),
+      (p, n) => (n ? `${n}? No, no... I think? I honestly can't tell what you're saying.` : pick([
+        'I really wish I understood. Maybe just point at what you want?',
+        'Nope, still nothing. Do you know any English at all?',
+        'Hang on, is anyone with you who speaks English?',
+      ])),
+      () => pick([
+        "Okay, I'm lost. I can't help you if I can't understand you.",
+        'Man, this is hard. English, please. Anything!',
+      ]),
+      (p) => `Look, I've got other customers. It's ${p} now. Come back when you can say it in English.`,
+      (p) => `${p}. Last try. If I still can't understand you, I'm done.`,
     ],
-    wrongLangKick: "That's it. We can't even talk. No sale, go on!",
+    wrongLangKick: 'Sorry, I give up. Bring a friend who speaks English and come back later!',
+    wrongLangHistory: '(said something Som Sri could not understand)',
     langKickedMsg: 'You kept using the wrong language, so she gave up on you.',
     win: 'YOU WIN!',
     lose: 'GAME OVER',
@@ -447,7 +472,9 @@ async function onWrongLanguage(text) {
     if (gen === S.gen) endGame('langKicked');
     return;
   }
-  await npcSay(lines[n - 1](S.price));
+  S.history.push({ role: 'player', text: L().wrongLangHistory });
+  const heardNumber = text.match(/\d+/)?.[0];
+  await npcSay(lines[n - 1](S.price, heardNumber));
   if (gen !== S.gen) return;
   S.busy = false;
   resetIdle();
