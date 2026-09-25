@@ -87,15 +87,15 @@ const T = {
     // What she says when the player keeps typing in another language (index = strike - 1)
     // She can't understand the player. (p = price, n = a number she did catch, if any)
     wrongLangLines: [
-      (p, n) => (n ? `${n}? เอ่อ... ${n} อะไรนะ ป้าฟังออกแค่ตัวเลขอะ พูดไทยได้ไหมจ๊ะ` : pick([
-        'ฮะ? พูดอะไรนะ... ป้าฟังฝรั่งไม่ออกหรอกจ้ะ พูดไทยได้ไหม',
-        'โอ๊ย ยูพูดอะไร ป้าไม่เก่งอังกฤษ พูดไทยช้า ๆ ได้ไหมลูก',
-        'เอ่อ... โซรี่ ๆ ป้าไม่รู้เรื่องเลย พูดไทยหน่อยนะ',
+      (p, n) => (n ? `${n}? เอ่อ... ${n} อะไรนะ ป้าฟังออกแค่ตัวเลขอะ นอกนั้นไม่รู้เรื่องเลย` : pick([
+        'ฮะ? พูดอะไรนะ... ภาษาอะไรน่ะ ป้าฟังไม่ออกเลย',
+        'เอ๊ะ... ภาษาไหนเนี่ย ป้าไม่เคยได้ยินเลย พูดไทยได้ไหมจ๊ะ',
+        'อะไรนะลูก? ป้าฟังไม่รู้เรื่องสักคำ',
       ])),
       (p, n) => (n ? `${n} เหรอ? โน ๆ ไม่ได้ ๆ... ที่เหลือป้าไม่รู้เรื่องเลย พูดไทยสิ` : pick([
-        'ไอ... ไอ ดอน สปีค... โอ๊ย ไม่รู้จะพูดยังไง ชี้เอาก็ได้ลูก',
-        'ป้าก็อยากเข้าใจนะ แต่ไม่ได้เรียนมา ลองพูดไทยดูอีกทีสิ',
-        'แม่ค้าร้านข้าง ๆ ที่พูดฝรั่งได้ก็ไม่อยู่ ไม่มีใครแปลให้เลย พูดไทยเถอะนะ',
+        'ป้าก็อยากเข้าใจนะ แต่ไม่รู้ว่าภาษาอะไร ชี้เอาก็ได้ลูก',
+        'ไม่รู้ภาษาไหนเลย ป้างงไปหมดแล้ว ลองพูดไทยดูสิ',
+        'ในตลาดนี้ไม่มีใครฟังภาษานี้ออกหรอก พูดไทยเถอะนะ',
       ])),
       () => pick([
         'พูดยาวแบบนี้ป้ายิ่งงงเข้าไปใหญ่! พูดไทยมาเถอะ ป้าขอร้อง',
@@ -182,14 +182,14 @@ const T = {
     wrongLang: 'English mode: please type in English only.',
     wrongLangLines: [
       (p, n) => (n ? `${n}? I got the number, but that's it. Can you say it in English?` : pick([
-        "Sorry, what? Is that Thai? I don't speak Thai.",
-        "Uh... I didn't catch any of that. English, maybe?",
-        'Oh, sorry, I only speak English. Can you try that in English?',
+        "Sorry, what? What language is that? I didn't get a word.",
+        "Huh? I have no idea what you just said. English, maybe?",
+        "Wait, what? I can't even tell what language that is.",
       ])),
       (p, n) => (n ? `${n}? No, no... I think? I honestly can't tell what you're saying.` : pick([
-        'I really wish I understood. Maybe just point at what you want?',
-        'Nope, still nothing. Do you know any English at all?',
-        'Hang on, is anyone with you who speaks English?',
+        "I really wish I understood. Maybe just point at what you want?",
+        "Nope, still nothing. I don't know what language that is.",
+        "Nobody around here speaks that, whatever it is. English, please?",
       ])),
       () => pick([
         "Okay, I'm lost. I can't help you if I can't understand you.",
