@@ -597,7 +597,7 @@ const RULES = {
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคา ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
-      <li><b>ห้ามเงียบ:</b> ถ้าไม่พิมพ์เกิน ${cfg.idleSeconds} วินาที ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
+      <li><b>ห้ามเงียบ:</b> ถ้าไม่ส่งข้อความเกิน ${cfg.idleSeconds} วินาที (พิมพ์ค้างไว้ไม่ส่งก็นับ) ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
       <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
       <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
     </ol>
@@ -613,7 +613,7 @@ const RULES = {
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
       <li><b>Lowball offers</b> and rudeness will annoy her. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
-      <li><b>Idle timer:</b> every ${cfg.idleSeconds}s of silence raises the price by 5฿. After 3 warnings, you get kicked out.</li>
+      <li><b>Idle timer:</b> every ${cfg.idleSeconds}s without sending a message (typing doesn't count) raises the price by 5฿. After 3 warnings, you get kicked out.</li>
       <li><b>No message limit.</b></li>
       <li><b>WIN:</b> close a deal within your budget. <b>LOSE:</b> the deal fails, you get kicked out, or you can't afford the price.</li>
     </ol>
@@ -740,7 +740,7 @@ els.form.addEventListener('submit', (e) => {
 
 els.input.addEventListener('input', () => {
   if (S.busy || S.over) return;
-  resetIdle(); // typing counts as responding
+  // typing does NOT pause her patience: only sending a message resets the timer
   renderPlayerBubble(els.input.value, true);
 });
 els.input.addEventListener('blur', () => {
