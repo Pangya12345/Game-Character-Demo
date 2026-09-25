@@ -43,6 +43,13 @@ const LINES = {
     floor: ['{price} บาทนี่ต่ำสุดแล้วจริง ๆ ลดกว่านี้ป้าไม่มีกินแล้ว'],
     final: ['คุยวนไปวนมาป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ ไปเถอะไป'],
     severe: ['ปากหมาแบบนี้ป้าไม่ขายให้หรอก! ไปให้พ้นเลย ไป๊!', 'ด่าคนแก่แบบนี้ได้ยังไง! ไม่ขายแล้ว ไปซื้อที่อื่นไป!'],
+    // asking the same thing again (index = repeat count - 1)
+    repeat: [
+      ['ก็ถามไปแล้วไงลูก ป้าก็ตอบไปแล้ว {price} จ้ะ', 'ถามซ้ำก็ได้คำตอบเดิมแหละ {price} บาท'],
+      ['ถามอยู่นั่นแหละ! มีอะไรใหม่ ๆ มาพูดบ้างไหม', 'เฮ้อ ป้าฟังจนเบื่อแล้วนะ พูดอย่างอื่นบ้างสิ'],
+      ['ถามอีกทีป้าไม่ขายจริง ๆ นะ! เตือนครั้งสุดท้าย', 'พอได้แล้ว! ถามซ้ำอีกครั้งเดียว ป้าเลิกขายเลย'],
+      ['บอกแล้วใช่ไหม! ไม่ขายแล้ว ไปเลยไป!', 'พอกันที! ถามวนอยู่ได้ ไปซื้อที่อื่นเถอะ!'],
+    ],
   },
   en: {
     rude: ["Hey, watch your mouth! Now it's {price}.", "Wow, rude. Fine, {price}. Take it or leave it."],
@@ -72,6 +79,12 @@ const LINES = {
     floor: ["{price} is really as low as I go. Any lower and I don't eat tonight."],
     final: ["We keep going in circles. I'm tired. No sale today."],
     severe: ["With that mouth? No way I'm selling to you. Get outta here!", "Don't you talk to me like that! No sale. Go!"],
+    repeat: [
+      ["You just asked me that. Same answer: {price}.", 'Asking again gets you the same answer. {price}.'],
+      ["Again? Come on, say something new.", "I've heard that already. Got anything else?"],
+      ["Ask me that one more time and I'm not selling. Last warning.", "Okay, stop. One more time and we're done."],
+      ["I warned you. That's it, no sale. Go on!", "Enough! Same question over and over. Go buy somewhere else!"],
+    ],
   },
 };
 
@@ -103,7 +116,7 @@ function parseOffer(text, qtySpan) {
   return null;
 }
 
-export function offlineReply({ cfg, message, state, history = [] }) {
+export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 }) {
   const lang = state.lang;
   const L = LINES[lang];
   const { qty, span } = parseQty(message);
@@ -154,6 +167,17 @@ export function offlineReply({ cfg, message, state, history = [] }) {
   }
 
   let failed = false;
+  if (repeatLvl > 0 && !RE.accept.test(message)) {
+    const level = repeatLvl;
+    return {
+      detected_language: lang,
+      npc_response: freshLine(L.repeat[level - 1], { price: state.price }, history),
+      npc_mood: level >= 3 ? 'angry' : 'stressed',
+      current_price: state.price,
+      deal_closed: false,
+      deal_failed: level >= 4,
+    };
+  }
   if (RE.severe.test(message)) {
     closed = false;
     failed = true;

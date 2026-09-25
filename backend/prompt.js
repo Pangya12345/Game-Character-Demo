@@ -84,7 +84,21 @@ function recentVendorLines(history) {
   return history.filter((h) => h.role === 'npc').slice(-6).map((h) => `- ${h.text}`).join('\n') || '(none yet)';
 }
 
-export function buildUserPrompt({ message, state, history }) {
+// How she reacts when the player keeps asking the same thing (counted by the server).
+// level: 1 noticed, 2 irritated (grows each time), 3 final warning, 4 ends the deal
+function repeatNote(level) {
+  if (!level) return '';
+  const levels = [
+    '',
+    'The player just asked the SAME thing again. Point it out naturally, like a real vendor would ("ก็ถามไปแล้วไง" / "You just asked me that"). No discount, mood "stressed".',
+    'They keep asking the same thing over and over. You are getting more irritated each time, like a real person would. Tell them to stop repeating and say something new. No discount, mood "stressed".',
+    'They asked the same thing yet again. You are angry now. Give a sharp FINAL warning: one more time and you stop selling. No discount, mood "angry".',
+    'They asked the SAME thing again after your final warning. You have had enough: refuse to sell and send them away, mood "angry", deal_failed=true.',
+  ];
+  return `\n- REPEAT ALERT: ${levels[level]}`;
+}
+
+export function buildUserPrompt({ message, state, history, repeatLvl = 0 }) {
   const transcript = history.length
     ? history.map((h) => `${h.role === 'npc' ? 'Som Sri' : 'Player'}: ${h.text}`).join('\n')
     : '(the player just walked up to the stall)';
@@ -92,7 +106,7 @@ export function buildUserPrompt({ message, state, history }) {
   return `STATE
 - language: ${state.lang === 'en' ? 'en (English)' : 'th (Thai)'}
 - current_asking_price: ${state.price}
-- player messages so far: ${state.turn}
+- player messages so far: ${state.turn}${repeatNote(repeatLvl)}
 - TODAY: ${today} (let this colour your mood and remarks naturally, don't announce it every time)
 
 CONVERSATION SO FAR (oldest first)
