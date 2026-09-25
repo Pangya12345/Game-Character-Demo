@@ -70,7 +70,6 @@ export function publicConfig() {
   const model = cfg.provider === 'gemini' ? cfg.geminiModel : cfg.provider === 'anthropic' ? cfg.anthropicModel : null;
   return {
     startPrice: cfg.startPrice,
-    maxTurns: cfg.maxTurns,
     idleSeconds: cfg.idleSeconds,
     maxPrice: cfg.maxPrice,
     provider: cfg.provider,
@@ -88,11 +87,11 @@ export async function negotiate(body, ip = 'unknown') {
   const s = body.state || {};
   const state = {
     price: clampInt(s.current_price, cfg.floorPrice, cfg.maxPrice, cfg.startPrice),
-    turn: clampInt(s.turn, 1, cfg.maxTurns, 1),
+    turn: clampInt(s.turn, 1, 9999, 1),
     lang: s.lang === 'en' ? 'en' : 'th',
     daySeed: clampInt(s.day_seed, 0, 9999, 0),
   };
-  const ctx = { cfg, message, state, history: sanitizeHistory(body.history), finalTurn: state.turn >= cfg.maxTurns };
+  const ctx = { cfg, message, state, history: sanitizeHistory(body.history) };
 
   let raw = null;
   let mode = cfg.provider;

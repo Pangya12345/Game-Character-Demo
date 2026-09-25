@@ -33,7 +33,7 @@ const T = {
   th: {
     mood: 'อารมณ์แม่ค้า:',
     price: 'ราคาปัจจุบัน:',
-    turn: (t, m) => `รอบ ${t}/${m}`,
+    patience: 'ความอดทนของแม่ค้า',
     chat: 'พิมพ์แชท:',
     placeholder: 'พิมพ์ต่อราคาได้เลย',
     moods: { neutral: 'เฉยๆ', happy: 'ดีใจ', angry: 'โกรธ', stressed: 'หงุดหงิด' },
@@ -67,7 +67,6 @@ const T = {
     ]),
     kicked: 'โดนไล่!',
     kickedMsg: 'ยืนเงียบนานเกินไป แม่ค้าเลยไล่ไปแล้ว ดีลล่ม!',
-    outOfTurns: 'คุยวนไปวนมา ป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ!',
     wallet: (b, kg, total) => `งบ ${b}฿ · ${kg} กก. = ${total}฿`,
     mission: (b, kg) => `ภารกิจ: คุณมีเงิน <b>${b} บาท</b> ต้องซื้อมะม่วง <b>${kg} กิโล</b> (ต้องได้ไม่เกิน ${Math.floor(b / kg)}฿/กก.)`,
     missionToast: (b, kg) => `💰 มีเงิน ${b}฿ ต้องซื้อ ${kg} กก. ต่อให้อยู่ในงบ!`,
@@ -81,7 +80,7 @@ const T = {
     lose: 'ดีลล่ม!',
     perKg: 'บาท/กก.',
     saved: (s) => (s > 0 ? `ประหยัดไป ${s} บาท/กก.` : 'ไม่ได้ลดเลยสักบาท'),
-    turns: (t) => `ใช้ไป ${t} รอบ`,
+    turns: (t) => `คุยไป ${t} ข้อความ`,
     loseMsg: 'แม่ค้าไม่ขายแล้ว ลองใช้วาทศิลป์แบบใหม่ดูนะ',
     again: 'เล่นอีกครั้ง',
     share: 'แชร์ผลลัพธ์',
@@ -106,7 +105,7 @@ const T = {
   en: {
     mood: 'Vendor Mood:',
     price: 'Current Price:',
-    turn: (t, m) => `Turn ${t}/${m}`,
+    patience: "Auntie's patience",
     chat: 'Chat:',
     placeholder: 'Start haggling',
     moods: { neutral: 'Neutral', happy: 'Happy', angry: 'Angry', stressed: 'Annoyed' },
@@ -140,7 +139,6 @@ const T = {
     ]),
     kicked: 'KICKED OUT!',
     kickedMsg: 'You stood silent too long and Som Sri chased you off. Deal failed!',
-    outOfTurns: "Round and round we go... I'm tired. No sale today!",
     wallet: (b, kg, total) => `Budget ${b}฿ · ${kg}kg = ${total}฿`,
     mission: (b, kg) => `Mission: you have <b>${b} baht</b> and must buy <b>${kg} kg</b> (max ${Math.floor(b / kg)}฿/kg).`,
     missionToast: (b, kg) => `💰 You have ${b}฿ for ${kg} kg. Stay within budget!`,
@@ -154,7 +152,7 @@ const T = {
     lose: 'NO DEAL!',
     perKg: 'baht/kg',
     saved: (s) => (s > 0 ? `You saved ${s} baht/kg` : 'Not a single baht off'),
-    turns: (t) => `${t} turns used`,
+    turns: (t) => `${t} messages`,
     loseMsg: 'Som Sri refused to sell. Try a different approach!',
     again: 'Play again',
     share: 'Share result',
@@ -190,7 +188,7 @@ const MISSIONS = [
 ];
 const pickMission = () => MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
 
-const cfg = { startPrice: 120, maxTurns: 12, idleSeconds: 25, maxPrice: 150, provider: 'offline', model: null };
+const cfg = { startPrice: 120, idleSeconds: 25, maxPrice: 150, provider: 'offline', model: null };
 const S = {
   started: false,
   over: false,
@@ -231,7 +229,7 @@ function setMood(mood) {
 }
 
 function renderTurn() {
-  els.turnVal.textContent = L().turn(S.turn, cfg.maxTurns);
+  els.turnVal.textContent = L().patience;
 }
 
 function renderWallet() {
@@ -438,11 +436,6 @@ async function send() {
 
     if (data.deal_closed) return endGame(S.price * S.mission.kg <= S.mission.budget ? 'win' : 'broke');
     if (data.deal_failed) return endGame('lose');
-    if (S.turn >= cfg.maxTurns) {
-      setMood('stressed');
-      await npcSay(L().outOfTurns);
-      return endGame('lose');
-    }
   } catch (err) {
     if (gen !== S.gen) return;
     S.turn -= 1;
@@ -511,8 +504,8 @@ const RULES = {
       <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคา ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
       <li><b>ห้ามเงียบ:</b> ถ้าไม่พิมพ์เกิน ${cfg.idleSeconds} วินาที ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
-      <li>คุยได้สูงสุด <b>${cfg.maxTurns} รอบ</b></li>
-      <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่, หมดรอบ หรือตกลงแล้วเงินไม่พอจ่าย</li>
+      <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
+      <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
       <li>ยิ่งได้ราคาถูก เกรดยิ่งสูง (S / A / B / C)</li>
     </ol>
     <p class="note">พิมพ์ข้อความแล้วกด Enter หรือ SEND · กด HINT (หรือปุ่ม Y) เพื่อขอคำใบ้</p>
@@ -529,8 +522,8 @@ const RULES = {
       <li><b>She gets angry</b> at ridiculous offers (like 10 baht) or rudeness and may raise the price. <b>Swear at or insult her and the deal fails instantly!</b></li>
       <li>She <b>remembers</b> the conversation, so the same trick won't work twice. She doesn't know your budget unless you tell her.</li>
       <li><b>Don't go quiet:</b> after ${cfg.idleSeconds} seconds of silence the price goes up 5 baht (3 warnings). The 4th time she <b>kicks you out</b> and the deal fails!</li>
-      <li>You have at most <b>${cfg.maxTurns} turns</b>.</li>
-      <li><b>Win:</b> agree on a price within your budget. <b>Lose:</b> deal fails, you get kicked out, you run out of turns, or you can't afford what you agreed.</li>
+      <li><b>No message limit.</b> Keep haggling as long as you like, just don't go quiet!</li>
+      <li><b>Win:</b> agree on a price within your budget. <b>Lose:</b> the deal fails, you get kicked out, or you can't afford what you agreed.</li>
       <li>The cheaper the price, the better your grade (S / A / B / C).</li>
     </ol>
     <p class="note">Type and press Enter or SEND. Press HINT (or the Y button) for a tip.</p>

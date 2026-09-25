@@ -28,7 +28,6 @@ export function getConfig() {
     startPrice: 120,
     maxPrice: 150,
     floorPrice: int(env.FLOOR_PRICE, 80),
-    maxTurns: int(env.MAX_TURNS, 12),
     idleSeconds: int(env.IDLE_SECONDS, 25),
   };
 }

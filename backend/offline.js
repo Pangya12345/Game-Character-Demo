@@ -104,7 +104,7 @@ function parseOffer(text, qtySpan) {
   return null;
 }
 
-export function offlineReply({ cfg, message, state, finalTurn, history = [] }) {
+export function offlineReply({ cfg, message, state, history = [] }) {
   const lang = THAI.test(message) ? 'th' : /[a-z]/i.test(message) ? 'en' : state.lang;
   const L = LINES[lang];
   const { qty, span } = parseQty(message);
@@ -160,10 +160,6 @@ export function offlineReply({ cfg, message, state, finalTurn, history = [] }) {
     failed = true;
     mood = 'angry';
     key = 'severe';
-  } else if (!closed && finalTurn) {
-    failed = true;
-    mood = 'stressed';
-    key = 'final';
   }
 
   return {

@@ -20,7 +20,6 @@ npm run dev               # เปิด http://localhost:3000
 | `GEMINI_API_KEY` / `GEMINI_MODEL` | key และโมเดลของ Gemini (ค่าเริ่มต้น `gemini-3.5-flash-lite` ถ้าไม่ว่างจะสลับไป `GEMINI_FALLBACK_MODEL` ให้อัตโนมัติ) |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | key และโมเดลของ Claude (ค่าเริ่มต้น `claude-sonnet-5`; ถ้าอยากได้ถูกและเร็วกว่าใช้ `claude-haiku-4-5-20251001`) |
 | `FLOOR_PRICE` | ราคาต่ำสุดที่แม่ค้ายอมขาย ซึ่งเป็นความลับ (ค่าเริ่มต้น 80) |
-| `MAX_TURNS` | จำนวนรอบสูงสุดที่คุยได้ (12) |
 | `IDLE_SECONDS` | จำนวนวินาทีที่ยืนเงียบได้ก่อนแม่ค้าจะหงุดหงิด (25) |
 
 ตั้ง `DEBUG_THOUGHTS=1` เพื่อดู "ความคิดในใจ" ของแม่ค้าใน console ของ server ได้ มีประโยชน์ตอนปรับ prompt
