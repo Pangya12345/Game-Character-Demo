@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: haggle-market
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/config
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: FLOOR_PRICE
+        value: "80"
