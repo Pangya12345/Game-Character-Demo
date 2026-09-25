@@ -512,6 +512,23 @@ button { cursor: pointer; }
 }
 .panel p { margin: .35em 0; }
 .panel .en { color: #6a5440; font-size: .92em; }
+.panel h2 {
+  margin: 0 0 .4em;
+  font-family: var(--font-th);
+  font-size: 1.6em;
+  color: #a8323a;
+}
+.panel ol {
+  margin: .7em 0;
+  padding-left: 1.6em;
+  text-align: left;
+}
+.panel ol li { margin: .15em 0; }
+.panel ol li::before { content: none; }
+.panel .rules { font-size: .82em; line-height: 1.4; }
+.panel .rules h2 { font-size: 1.7em; }
+.panel .pick { margin-top: 1em; font-weight: 700; }
+.panel .note { font-size: .88em; color: #6a5440; }
 .panel .mission {
   margin: .7em auto .2em;
   padding: .45em .8em;

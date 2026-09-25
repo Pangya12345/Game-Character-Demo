@@ -443,29 +443,70 @@ function showTitle() {
   S.mission = pickMission();
   setPrice(cfg.startPrice, { silent: true });
   setInputEnabled(false);
-  const { budget, kg } = S.mission;
+  S.screen = 'title';
   showOverlay(`
     <h1>ตลาดต่อราคา<small>HAGGLE MARKET</small></h1>
-    <p>ต่อราคามะม่วงกับ <b>แม่ค้าสมศรี</b> ให้ได้ถูกที่สุด! พิมพ์คุยได้อิสระทั้ง <b>ไทย</b> และ <b>English</b></p>
-    <p class="en">Haggle mangoes with Auntie Som Sri. Type anything, in Thai or English.</p>
-    <p class="mission">${T.th.mission(budget, kg)}<br><span class="en">${T.en.mission(budget, kg)}</span></p>
-    <ul>
-      <li>สุภาพ ให้เหตุผล ซื้อเหมา หรืออ้อนเก่ง ๆ = ได้ส่วนลด</li>
-      <li>ต่อต่ำเกินเหตุหรือพูดไม่ดี = แม่ค้าโกรธ</li>
-      <li>เงียบเกิน ${cfg.idleSeconds} วิ = แม่ค้าขึ้นราคา ยังเงียบต่อเรื่อย ๆ = โดนไล่ ดีลล่ม!</li>
-      <li>มีเวลา ${cfg.maxTurns} รอบ ต้องตกลงราคาให้อยู่ในงบ ถ้าตกลงแล้วเงินไม่พอจ่าย = แพ้</li>
-    </ul>
+    <p>ต่อราคามะม่วงกับ <b>แม่ค้าสมศรี</b> แม่ค้า AI ปากร้ายใจดี</p>
+    <p class="en">Haggle mangoes with Auntie Som Sri, a sharp-tongued but kind-hearted AI vendor.</p>
+    <p class="pick">เลือกภาษา · Choose your language</p>
     <div class="row-btns">
-      <button class="pbtn" data-start="th">เริ่มเกม (ไทย)</button>
-      <button class="pbtn alt" data-start="en">START (English)</button>
+      <button class="pbtn" data-lang="th">ภาษาไทย</button>
+      <button class="pbtn alt" data-lang="en">English</button>
     </div>`);
+}
+
+// Full rules in the chosen language, shown before every new game from the title screen.
+const RULES = {
+  th: (m) => `
+    <h2>กติกาการเล่น</h2>
+    <p class="mission">ภารกิจ: คุณมีเงิน <b>${m.budget} บาท</b> ต้องซื้อมะม่วง <b>${m.kg} กิโล</b><br>ราคาเริ่มต้นกิโลละ ${cfg.startPrice} บาท ต้องต่อให้เหลือไม่เกิน <b>${Math.floor(m.budget / m.kg)} บาท/กก.</b></p>
+    <ol>
+      <li><b>พิมพ์คุยได้อิสระ</b> แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ</li>
+      <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
+      <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคาหรือเลิกขายเลย</li>
+      <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
+      <li><b>ห้ามเงียบ:</b> ถ้าไม่พิมพ์เกิน ${cfg.idleSeconds} วินาที ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
+      <li>คุยได้สูงสุด <b>${cfg.maxTurns} รอบ</b></li>
+      <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่, หมดรอบ หรือตกลงแล้วเงินไม่พอจ่าย</li>
+      <li>ยิ่งได้ราคาถูก เกรดยิ่งสูง (S / A / B / C)</li>
+    </ol>
+    <p class="note">พิมพ์ข้อความแล้วกด Enter หรือ SEND · กด HINT (หรือปุ่ม Y) เพื่อขอคำใบ้</p>
+    <div class="row-btns">
+      <button class="pbtn alt" data-back>ย้อนกลับ</button>
+      <button class="pbtn" data-start="th">เริ่มเล่น!</button>
+    </div>`,
+  en: (m) => `
+    <h2>How to play</h2>
+    <p class="mission">Mission: you have <b>${m.budget} baht</b> and must buy <b>${m.kg} kg</b> of mangoes.<br>They start at ${cfg.startPrice} baht/kg. Get the price down to <b>${Math.floor(m.budget / m.kg)} baht/kg</b> or less.</p>
+    <ol>
+      <li><b>Type anything.</b> Som Sri is an AI that thinks about what you actually say.</li>
+      <li><b>Earn discounts</b> by being polite, giving believable reasons, buying in bulk, charming her, and using real haggling tricks.</li>
+      <li><b>She gets angry</b> at ridiculous offers (like 10 baht) or rudeness, and may raise the price or refuse to sell.</li>
+      <li>She <b>remembers</b> the conversation, so the same trick won't work twice. She doesn't know your budget unless you tell her.</li>
+      <li><b>Don't go quiet:</b> after ${cfg.idleSeconds} seconds of silence the price goes up 5 baht (3 warnings). The 4th time she <b>kicks you out</b> and the deal fails!</li>
+      <li>You have at most <b>${cfg.maxTurns} turns</b>.</li>
+      <li><b>Win:</b> agree on a price within your budget. <b>Lose:</b> deal fails, you get kicked out, you run out of turns, or you can't afford what you agreed.</li>
+      <li>The cheaper the price, the better your grade (S / A / B / C).</li>
+    </ol>
+    <p class="note">Type and press Enter or SEND. Press HINT (or the Y button) for a tip.</p>
+    <div class="row-btns">
+      <button class="pbtn alt" data-back>Back</button>
+      <button class="pbtn" data-start="en">Start!</button>
+    </div>`,
+};
+
+function showRules(lang) {
+  S.screen = 'rules';
+  S.lang = lang;
+  applyLang();
+  showOverlay(`<div class="rules">${RULES[lang](S.mission)}</div>`);
 }
 
 async function startGame(lang, { newMission = false } = {}) {
   hideOverlay();
   if (newMission) S.mission = pickMission();
   finishTyping();
-  Object.assign(S, { started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, gen: S.gen + 1 });
+  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, gen: S.gen + 1 });
   setPrice(cfg.startPrice, { silent: true });
   applyLang();
   setMood('neutral');
@@ -579,6 +620,9 @@ els.input.addEventListener('blur', () => {
 els.npcBubble.addEventListener('click', finishTyping);
 
 els.overlay.addEventListener('click', (e) => {
+  const pickLang = e.target.closest('[data-lang]');
+  if (pickLang) showRules(pickLang.dataset.lang);
+  if (e.target.closest('[data-back]')) showTitle();
   const start = e.target.closest('[data-start]');
   if (start) startGame(start.dataset.start);
   if (e.target.closest('[data-restart]')) startGame(S.lang, { newMission: true });
@@ -601,7 +645,7 @@ document.querySelectorAll('.mobile-controls [data-act]').forEach((b) => b.addEve
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !els.log.classList.contains('hidden')) els.log.classList.add('hidden');
   const onButton = document.activeElement?.tagName === 'BUTTON';
-  if (e.key === 'Enter' && !onButton && !els.overlay.classList.contains('hidden') && !S.started) startGame('th');
+  if (e.key === 'Enter' && !onButton && S.screen === 'rules' && !S.started) startGame(S.lang);
 });
 
 /* ---------------- Boot ---------------- */
