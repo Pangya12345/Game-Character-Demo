@@ -499,9 +499,9 @@ button { cursor: pointer; }
 .panel h1 small {
   display: block;
   margin-top: .2em;
-  font-family: var(--font);
+  font-family: var(--font-th);
   font-size: .45em;
-  letter-spacing: .25em;
+  letter-spacing: .04em;
   color: var(--wood-2);
 }
 .panel p { margin: .35em 0; }

@@ -194,7 +194,7 @@ const S = {
   over: false,
   busy: false,
   typing: false,
-  lang: 'th',
+  lang: 'en', // English first; the player can switch to Thai on the title screen
   price: 120,
   mood: 'neutral',
   turn: 0,
@@ -483,13 +483,13 @@ function showTitle() {
   setInputEnabled(false);
   S.screen = 'title';
   showOverlay(`
-    <h1>ตลาดต่อราคา<small>HAGGLE MARKET</small></h1>
-    <p>ต่อราคามะม่วงกับ <b>แม่ค้าสมศรี</b> แม่ค้า AI ปากร้ายใจดี</p>
-    <p class="en">Haggle mangoes with Auntie Som Sri, a sharp-tongued but kind-hearted AI vendor.</p>
-    <p class="pick">เลือกภาษา · Choose your language</p>
+    <h1>Haggle Market<small>ตลาดต่อราคา</small></h1>
+    <p>Haggle for mangoes with <b>Auntie Som Sri</b>, a sharp-tongued but kind-hearted AI vendor.</p>
+    <p class="en">ต่อราคามะม่วงกับแม่ค้าสมศรี แม่ค้า AI ปากร้ายใจดี</p>
+    <p class="pick">Choose your language · เลือกภาษา</p>
     <div class="row-btns">
-      <button class="pbtn" data-lang="th">ภาษาไทย</button>
-      <button class="pbtn alt" data-lang="en">English</button>
+      <button class="pbtn" data-lang="en">English</button>
+      <button class="pbtn alt" data-lang="th">ภาษาไทย</button>
     </div>`);
 }
 
