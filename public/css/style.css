@@ -422,7 +422,7 @@ button { cursor: pointer; }
 /* Toast */
 .toast {
   position: absolute;
-  top: 14%;
+  top: 21%;
   left: 50%;
   transform: translate(-50%, -8px);
   max-width: 70%;
@@ -608,9 +608,17 @@ button { cursor: pointer; }
     background: #1d140e;
   }
   .stage { position: relative; aspect-ratio: 16 / 9; }
-  .hud-box { font-size: 11px; padding: .35em .6em; }
-  .hud-mid { font-size: 10px; }
-  .hud-wallet { font-size: 10px; }
+  /* compact HUD so the four boxes fit on a phone */
+  .hud { top: 6px; left: 6px; right: 6px; gap: 4px; }
+  .hud-box { font-size: 10px; padding: .3em .5em; }
+  .hud-mid { font-size: 9px; padding: 3px 5px; }
+  #turnVal { display: none; }
+  .timer { width: 90px; }
+  .hud-btns { gap: 3px; }
+  .hud-btns button { font-size: 8px; padding: .25em .45em; }
+  .hud-wallet { font-size: 9px; }
+  .hud-right { gap: 3px; }
+  .price-pop { font-size: 11px; }
   .bubble {
     position: relative;
     inset: auto;
@@ -627,13 +635,15 @@ button { cursor: pointer; }
   .nametag { font-size: 11px; left: 10px; }
   .bubble.npc, .bubble.player { left: auto; right: auto; }
   .bubble.player { align-self: flex-end; margin-left: 20%; }
-  .chatbar { position: relative; height: 52px; padding: 0 10px; gap: 8px; border: 0; }
+  /* chat box sits at the bottom like a messaging app */
+  .chatbar { position: relative; height: 56px; padding: 0 10px; gap: 8px; border: 0; margin-top: auto; }
   .chatbar label { display: none; }
   .chatbar input { font-size: 16px; }
   .chatbar button { font-size: 13px; padding: 0 12px; }
   .panel { width: 100%; font-size: 14px; padding: 16px; }
   .log { top: 8px; right: 8px; left: 8px; bottom: 8px; width: auto; font-size: 14px; }
-  .toast { font-size: 13px; top: 20px; }
+  .toast { font-size: 13px; top: auto; bottom: 72px; max-width: 90%; }
+  .footnote { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

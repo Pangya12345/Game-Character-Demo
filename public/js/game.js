@@ -22,6 +22,7 @@ const els = {
   overlay: $('overlay'),
   modeNote: $('modeNote'),
   wallet: $('walletVal'),
+  nametag: document.querySelector('.nametag'),
 };
 
 /* ---------------- Text (UI follows the language the player types in) ---------------- */
@@ -30,7 +31,7 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // Same rule as the server: English mode = no Thai letters; Thai mode = must contain Thai.
 function matchesLanguage(text, lang) {
-  const thai = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
+  const thai = (text.match(/[\u0E00-\u0E3E\u0E40-\u0E7F]/g) || []).length; // Thai script, but not the \u0E3F sign (U+0E3F)
   const latin = (text.match(/[A-Za-z]/g) || []).length;
   return lang === 'en' ? thai === 0 : thai > 0 || latin === 0;
 }
@@ -47,14 +48,13 @@ const T = {
     greet: (p) => pick([
       `มะม่วงน้ำดอกไม้กิโลละ ${p} บาทจ้ะ พ่อหนุ่ม ราคานี้ลดไม่ได้แล้วน้า`,
       `เอามะม่วงไหมจ๊ะ หวานฉ่ำ เพิ่งเก็บจากสวนเมื่อเช้า กิโลละ ${p} เท่านั้น`,
-      `ดูได้ จับได้ ชิมไม่ได้นะ! น้ำดอกไม้แท้ ๆ กิโลละ ${p} จ้ะ`,
       `มาแล้วเหรอ ยืนดูตั้งนาน จะเอากี่โลล่ะ? กิโลละ ${p} บาท`,
       `ร้อนก็ร้อน... เอามะม่วงไปกินให้ชื่นใจไหมหลาน กิโลละ ${p} ไม่แพงหรอก`,
     ]),
     idleRaise: [
       (p) => pick([
         `ว่าไงพ่อหนุ่ม ยืนเงียบทำไม? ป้าเสียเวลาขาย ขึ้นเป็น ${p} บาทนะ`,
-        `ยืนเหม่ออะไรล่ะ ลูกค้าคนอื่นรออยู่นะ คิดนานก็ ${p} บาทไปเลย`,
+        `ยืนเหม่ออะไรล่ะ ป้าไม่ได้ว่างทั้งวันนะ คิดนานก็ ${p} บาทไปเลย`,
         `เงียบแบบนี้ป้าถือว่าไม่รีบนะ งั้นราคาขึ้นเป็น ${p} บาท`,
       ]),
       (p) => pick([
@@ -122,12 +122,13 @@ const T = {
     logEmpty: 'ยังไม่มีบทสนทนา',
     you: 'คุณ',
     vendor: 'แม่ค้าสมศรี',
+    vendorName: 'แม่ค้าสมศรี',
     hints: [
       'พูดจาสุภาพ มีหางเสียง แม่ค้าจะใจอ่อนง่ายขึ้น',
       'ลองให้เหตุผล เช่น ร้านอื่นถูกกว่า หรือเป็นนักศึกษางบน้อย',
       'ซื้อเหมาหลายกิโล มีโอกาสได้ส่วนลดมากขึ้น',
       'ชวนคุยเรื่องอื่นบ้าง สร้างความสนิทก่อนค่อยต่อราคา',
-      'ต่อราคาต่ำเกินไป แม่ค้าจะโกรธและไม่ลดให้',
+      'ต่อราคาต่ำเกินไป แม่ค้าจะหงุดหงิดและไม่ลดให้',
       'ใช้มุกเดิมซ้ำ ๆ ไม่ได้ผลนะ แม่ค้าจำได้',
       'ยิ่งยืนเงียบ แม่ค้ายิ่งขึ้นราคา เงียบนานเกินไปจะโดนไล่!',
       'แม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ลองบอกงบของคุณดูสิ',
@@ -143,7 +144,6 @@ const T = {
     greet: (p) => pick([
       `Mangoes! ${p} baht a kilo. That's already a good price.`,
       `Fresh mangoes, picked this morning. ${p} a kilo.`,
-      `Look all you want, but no free samples! ${p} a kilo.`,
       `You've been staring for a while. How many kilos? ${p} each.`,
       `Hot out today, huh? Grab some mangoes. Just ${p} a kilo.`,
     ]),
@@ -151,7 +151,7 @@ const T = {
       (p) => pick([
         `Hello? You just gonna stand there? Now it's ${p}.`,
         `Take your time, but it'll cost you. ${p} baht now.`,
-        `Other people are waiting, you know. ${p} now.`,
+        `I've got stuff to do, you know. ${p} now.`,
       ]),
       (p) => pick([
         `Still nothing? You're blocking my stand. ${p}!`,
@@ -216,6 +216,7 @@ const T = {
     logEmpty: 'No messages yet',
     you: 'You',
     vendor: 'Som Sri',
+    vendorName: 'Auntie Som Sri',
     hints: [
       'TIP: Being polite gets you better prices.',
       'TIP: Give a good reason, like a cheaper stall nearby or a tight budget.',
@@ -269,6 +270,7 @@ function applyLang() {
   $('lblMood').textContent = L().mood;
   $('lblPrice').textContent = L().price;
   $('lblChat').textContent = L().chat;
+  els.nametag.textContent = L().vendorName;
   renderWallet();
   els.input.placeholder = L().placeholder;
   setMood(S.mood);
@@ -455,6 +457,9 @@ async function onWrongLanguage(text) {
   resetIdle();
   const lines = L().wrongLangLines;
   const n = S.wrongLang;
+  showThinking();
+  await new Promise((r) => setTimeout(r, 500 + Math.random() * 500));
+  if (gen !== S.gen) return;
   if (n === 1) toast(L().wrongLang, 3000);
   if (n <= 2) {
     setMood('confused');
@@ -515,7 +520,7 @@ async function send() {
       body: JSON.stringify({
         message: text,
         state: { current_price: S.price, turn: S.turn, lang: S.lang, day_seed: S.daySeed },
-        history: S.history.slice(-24),
+        history: S.history.slice(-40),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -595,7 +600,7 @@ const RULES = {
     <ol>
       <li><b>พิมพ์คุยได้อิสระ</b> แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ (<b>พิมพ์ภาษาไทยเท่านั้น</b> ถ้าพิมพ์ภาษาอื่นแม่ค้าจะงง ถ้าบ่อย ๆ จะโกรธ)</li>
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
-      <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคา ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
+      <li><b>แม่ค้าจะหงุดหงิดและไม่ลดให้</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
       <li><b>ห้ามเงียบ:</b> ถ้าไม่ส่งข้อความเกิน ${cfg.idleSeconds} วินาที (พิมพ์ค้างไว้ไม่ส่งก็นับ) ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
       <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
@@ -611,7 +616,7 @@ const RULES = {
     <ol>
       <li><b>Chat freely</b> in <b>English only</b>. Som Sri is an AI and responds to what you say. Other languages confuse her, and she gets mad if you keep trying.</li>
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
-      <li><b>Lowball offers</b> and rudeness will annoy her. <b>Insults end the deal immediately.</b></li>
+      <li><b>Lowball offers</b> and rudeness annoy her, and she won't drop the price. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
       <li><b>Idle timer:</b> every ${cfg.idleSeconds}s without sending a message (typing doesn't count) raises the price by 5฿. After 3 warnings, you get kicked out.</li>
       <li><b>No message limit.</b></li>
@@ -657,7 +662,9 @@ function endGame(result) {
   setInputEnabled(false);
   const saved = cfg.startPrice - S.price;
   const total = S.price * S.mission.kg;
+  const gen = S.gen;
   setTimeout(() => {
+    if (gen !== S.gen) return; // player already restarted: don't show the old result
     if (result === 'win') {
       sfx.win();
       const g = grade(S.price);

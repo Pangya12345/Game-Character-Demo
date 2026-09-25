@@ -2,10 +2,11 @@
 import { getConfig } from './config.js';
 import { callAnthropic, callGemini } from './llm.js';
 import { offlineReply } from './offline.js';
+import { isConfirmation, matchesLanguage, playerOffer } from './rules.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
 const MAX_MESSAGE = 280;
-const MAX_HISTORY = 24;
+const MAX_HISTORY = 40;
 
 const clampInt = (v, min, max, fallback) => {
   const n = Math.round(Number(v));
@@ -32,14 +33,6 @@ function sanitizeHistory(history) {
     .filter((h) => h && (h.role === 'npc' || h.role === 'player') && typeof h.text === 'string')
     .slice(-MAX_HISTORY)
     .map((h) => ({ role: h.role, text: h.text.slice(0, 400) }));
-}
-
-// The chosen game mode locks the language: English mode = no Thai letters,
-// Thai mode = must contain Thai (English words mixed in, or just numbers, are fine).
-export function matchesLanguage(text, lang) {
-  const thai = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
-  const latin = (text.match(/[A-Za-z]/g) || []).length;
-  return lang === 'en' ? thai === 0 : thai > 0 || latin === 0;
 }
 
 // ---- Repeated questions -------------------------------------------------------------
@@ -92,33 +85,6 @@ export function countRepeats(message, history) {
   ).length;
 }
 
-// ---- Real-market sanity checks ---------------------------------------------------------
-const QTY = /(\d+(?:\.\d+)?)\s*(กิโล|โล|กก|kg|kilo)/i;
-const CONFIRM = /(ตกลง|โอเค|เอาเลย|เอาตามนั้น|จัดไป|ซื้อเลย|ได้ครับ|ได้ค่ะ|ได้เลย|เอาครับ|เอาค่ะ|เอาจ้ะ|\bok\b|okay|deal|i'?ll take|take it|sounds good|let'?s do it|\byes\b|\byep\b|\bsure\b|\bfine\b)/i;
-
-// The per-kilo price the player is offering in this message, if any.
-// "300 for 3 kilos" -> 100. Numbers that are the quantity itself are ignored.
-export function playerOffer(message, maxPrice) {
-  const qm = message.match(QTY);
-  const qty = qm ? parseFloat(qm[1]) : 0;
-  const nums = [];
-  for (const m of message.matchAll(/\d+/g)) {
-    if (qm && m.index >= qm.index && m.index < qm.index + qm[0].length) continue;
-    nums.push(parseInt(m[0], 10));
-  }
-  const perKilo = nums.filter((n) => n > 0 && n <= maxPrice);
-  if (perKilo.length) return Math.max(...perKilo);
-  const total = nums.find((n) => n > maxPrice);
-  return total && qty ? Math.round(total / qty) : null;
-}
-
-// Did the player actually confirm buying at `price`? A new, lower offer is not a confirmation.
-export function isConfirmation(message, price, maxPrice) {
-  if (!CONFIRM.test(message)) return false;
-  const offer = playerOffer(message, maxPrice);
-  return offer == null || offer >= price;
-}
-
 // Never trust the model blindly: enforce the JSON contract and the price rules server-side.
 function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 }) {
   const lang = state.lang; // fixed by the game mode the player picked
@@ -157,6 +123,11 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   if (!npc_response) {
     npc_response = lang === 'th' ? 'ว่าไงนะ ป้าฟังไม่ทัน พูดใหม่ซิ' : "Sorry, I didn't catch that. Say it again?";
   }
+  // If the rules above moved her price, make the number she says match the price on screen.
+  const aiPrice = Math.round(Number(raw?.current_price));
+  if (Number.isFinite(aiPrice) && aiPrice !== price) {
+    npc_response = npc_response.replace(new RegExp(`(^|\\D)${aiPrice}(?!\\d)`, 'g'), `$1${price}`);
+  }
 
   return { detected_language: lang, npc_response, npc_mood, current_price: price, deal_closed, deal_failed };
 }
@@ -177,7 +148,10 @@ export async function negotiate(body, ip = 'unknown') {
   if (rateLimited(ip)) return { status: 429, json: { error: 'rate_limited' } };
 
   const cfg = getConfig();
-  const message = typeof body?.message === 'string' ? body.message.trim().slice(0, MAX_MESSAGE) : '';
+  // Thai digits (๑๐๐) -> 100 so offers written in Thai numerals are understood too.
+  const message = typeof body?.message === 'string'
+    ? body.message.replace(/[๐-๙]/g, (d) => String(d.charCodeAt(0) - 0x0e50)).trim().slice(0, MAX_MESSAGE)
+    : '';
   if (!message) return { status: 400, json: { error: 'empty_message' } };
 
   const s = body.state || {};
@@ -199,6 +173,11 @@ export async function negotiate(body, ip = 'unknown') {
     try {
       raw = cfg.provider === 'gemini' ? await callGemini(ctx) : await callAnthropic(ctx);
       if (process.env.DEBUG_THOUGHTS && raw?.inner_thoughts) console.log('[Som Sri thinks]', raw.inner_thoughts);
+      // The model slipped into the other language: use the scripted reply for this turn instead.
+      if (typeof raw?.npc_response !== 'string' || !raw.npc_response.trim() || !matchesLanguage(raw.npc_response, state.lang)) {
+        raw = null;
+        mode = 'offline-fallback';
+      }
     } catch (err) {
       console.error('[LLM error]', err.message);
       mode = 'offline-fallback';

@@ -1,3 +1,5 @@
+import { playerOffer, saysYes } from './rules.js';
+
 // Rule-based stand-in for the LLM. Used when no API key is configured, or when the API call fails,
 // so the game is always playable. It is intentionally simpler than the real AI.
 
@@ -11,7 +13,6 @@ const RE = {
   // swearing / insults: the vendor refuses to sell immediately
   severe: /(เหี้ย|สัส|สาด|ควาย|อีแก่|แก่หัวงู|ไอ้สัตว์|อีดอก|หน้าหี|ชิบหาย|พ่อมึง|แม่มึง|มึง|กู|fuck|shit|bitch|bastard|asshole|old hag|thief|cheat)/i,
   rude: /(โกง|ขี้โกง|ห่วย|บ้าป่าว|แพงฉิบ|แพงชะมัด|stupid|scam|rip ?off|idiot|greedy)/i,
-  accept: /(ตกลง|เอาเลย|โอเค|ซื้อเลย|เอาตามนั้น|\bok\b|okay|deal|i'?ll take)/i,
 };
 
 const LINES = {
@@ -23,7 +24,7 @@ const LINES = {
     counter: [
       '{offer} ไม่ไหวหรอกหนู ป้าให้ {price} บาทละกัน ลดให้แล้วนะ',
       'ต่อเก่งจริงนะเรา! {price} บาทเป็นไง ต่ำกว่านี้ป้าเจ๊งแน่',
-      '{offer} เหรอ... ไม่ได้ ๆ เจอกันครึ่งทาง {price} ก็แล้วกัน',
+      '{offer} เหรอ... ไม่ได้ ๆ {price} ก็แล้วกัน',
       'โห {offer} ป้าขาดทุนตายเลย {price} นี่ใจดีสุดแล้วนะ',
       'ถ้า {offer} ป้าไปขายเจ้าอื่นดีกว่า เอา {price} ไหมล่ะ?',
     ],
@@ -59,7 +60,7 @@ const LINES = {
     counter: [
       "{offer} is too low. I can do {price}. That's already a deal.",
       "You're tough! {price}. Any lower and I'm losing money.",
-      '{offer}? Nah. Meet me in the middle, {price}.',
+      '{offer}? Nah. Best I can do is {price}.',
       "At {offer} I lose money. {price} is me being nice.",
       "For {offer} I'll just sell to the next guy. {price}?",
     ],
@@ -101,26 +102,17 @@ const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]);
 
 function parseQty(text) {
   const m = text.match(RE.qty);
-  if (!m) return { qty: 0, span: null };
+  if (!m) return { qty: 0 };
   const raw = m[1].toLowerCase();
   const qty = NUM_WORDS[raw] ?? parseFloat(raw);
-  return { qty, span: [m.index, m.index + m[0].length] };
-}
-
-function parseOffer(text, qtySpan) {
-  for (const m of text.matchAll(/\d+/g)) {
-    if (qtySpan && m.index >= qtySpan[0] && m.index < qtySpan[1]) continue;
-    const n = parseInt(m[0], 10);
-    if (n > 0 && n <= 200) return n; // bigger numbers are budgets/totals, not a per-kg offer
-  }
-  return null;
+  return { qty };
 }
 
 export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 }) {
   const lang = state.lang;
   const L = LINES[lang];
-  const { qty, span } = parseQty(message);
-  const offer = parseOffer(message, span);
+  const { qty } = parseQty(message);
+  const offer = playerOffer(message, cfg.maxPrice);
   const polite = RE.polite.test(message);
   const charm = RE.charm.test(message);
   const reason = RE.reason.test(message);
@@ -139,7 +131,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     key = 'lowball';
   } else if (offer != null && offer >= price) {
     // offering the asking price (or more) and saying yes = sale; otherwise she asks to confirm
-    closed = RE.accept.test(message);
+    closed = saysYes(message);
     mood = 'happy';
     key = closed ? 'deal' : 'acceptOffer';
   } else if (offer != null) {
@@ -155,7 +147,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
       mood = step >= 6 ? 'happy' : price - offer > 20 ? 'stressed' : 'neutral';
       key = price === cfg.floorPrice ? 'floor' : 'counter';
     }
-  } else if (RE.accept.test(message)) {
+  } else if (saysYes(message)) {
     closed = true;
     mood = 'happy';
     key = 'deal';
@@ -168,7 +160,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
   }
 
   let failed = false;
-  if (repeatLvl > 0 && !RE.accept.test(message)) {
+  if (repeatLvl > 0 && !saysYes(message)) {
     const level = repeatLvl;
     return {
       detected_language: lang,
