@@ -103,75 +103,75 @@ const T = {
     ],
   },
   en: {
-    mood: 'Vendor Mood:',
-    price: 'Current Price:',
-    patience: "Auntie's patience",
-    chat: 'Chat:',
-    placeholder: 'Start haggling',
-    moods: { neutral: 'Neutral', happy: 'Happy', angry: 'Angry', stressed: 'Annoyed' },
+    mood: 'Her Mood:',
+    price: 'Price:',
+    patience: 'Her patience',
+    chat: 'Say:',
+    placeholder: 'Type here to haggle',
+    moods: { neutral: 'Okay', happy: 'Happy', angry: 'Mad', stressed: 'Annoyed' },
     greet: (p) => pick([
-      `Nam Dok Mai mangoes, ${p} baht a kilo, dear. That's already my lowest, na.`,
-      `Sweetest mangoes in the market, picked this morning. ${p} a kilo.`,
-      `Look all you want, no tasting! ${p} baht a kilo, dear.`,
-      `You've been staring a while. How many kilos? ${p} baht each.`,
-      `Hot day, isn't it? A cold mango fixes that. Only ${p} a kilo.`,
+      `Mangoes! ${p} baht a kilo, hon. That's already a good price.`,
+      `Fresh mangoes, picked this morning. ${p} a kilo.`,
+      `Look all you want, but no free samples! ${p} a kilo.`,
+      `You've been staring for a while. How many kilos? ${p} each.`,
+      `Hot out today, huh? Grab some mangoes. Just ${p} a kilo.`,
     ]),
     idleRaise: [
       (p) => pick([
-        `Well? Just standing there? You're costing me customers. It's ${p} baht now.`,
-        `Daydreaming? Others are waiting. Take too long and it's ${p}.`,
-        `No hurry, huh? Then neither am I. ${p} baht now.`,
+        `Hello? You just gonna stand there? Now it's ${p}.`,
+        `Take your time, but it'll cost you. ${p} baht now.`,
+        `Other people are waiting, you know. ${p} now.`,
       ]),
       (p) => pick([
-        `Silent again! You're blocking my stall. ${p} baht!`,
-        `Are you buying or just hiding from the sun? ${p} baht now.`,
-        `I don't have all day, child. ${p}. Speak up.`,
+        `Still nothing? You're blocking my stand. ${p}!`,
+        `Are you buying or just hiding from the sun? ${p} now.`,
+        `I don't have all day, kid. ${p}. Say something.`,
       ]),
       (p) => pick([
-        `${p} baht! Last warning, say something or off you go!`,
-        `Last chance: ${p} baht. One more silence and no sale!`,
+        `${p}! Last warning. Say something or I'm done with you.`,
+        `Last chance: ${p}. One more time and no deal!`,
       ]),
     ],
     idleKick: () => pick([
-      'Shoo! Not buying? Then move along, I have real customers. No sale!',
-      'Enough! Standing there like a statue. Off you go, I am closing up!',
-      'What a waste of my time! Step aside and let someone else buy!',
+      "Okay, that's it. If you're not buying, move along. No sale!",
+      "Forget it. You're just standing there. I'm done, go on!",
+      "You're wasting my time. Step aside and let someone else buy!",
     ]),
     kicked: 'KICKED OUT!',
-    kickedMsg: 'You stood silent too long and Som Sri chased you off. Deal failed!',
-    wallet: (b, kg, total) => `Budget ${b}฿ · ${kg}kg = ${total}฿`,
-    mission: (b, kg) => `Mission: you have <b>${b} baht</b> and must buy <b>${kg} kg</b> (max ${Math.floor(b / kg)}฿/kg).`,
-    missionToast: (b, kg) => `💰 You have ${b}฿ for ${kg} kg. Stay within budget!`,
+    kickedMsg: 'You stayed quiet too long, so she kicked you out. No deal!',
+    wallet: (b, kg, total) => `You have ${b}฿ · ${kg} kg = ${total}฿`,
+    mission: (b, kg) => `Goal: you have <b>${b} baht</b> to buy <b>${kg} kg</b> (${Math.floor(b / kg)}฿/kg or less).`,
+    missionToast: (b, kg) => `💰 You have ${b}฿ for ${kg} kg. Don't go over!`,
     broke: 'NOT ENOUGH MONEY!',
-    brokeMsg: (total, b) => `You agreed on ${total}฿ in total, but you only have ${b}฿...`,
-    leftover: (m) => `${m} baht left in your wallet`,
-    netError: '(Connection lost... your message is still in the box, try sending again.)',
-    fallback: 'AI did not respond; using backup mode for now',
-    rateLimited: 'Too many messages, slow down a little',
+    brokeMsg: (total, b) => `You agreed to pay ${total}฿, but you only have ${b}฿...`,
+    leftover: (m) => `${m} baht left over`,
+    netError: "(Couldn't connect. Your message is still there, try again.)",
+    fallback: 'The AI is slow right now, so backup mode is on for a bit',
+    rateLimited: "Whoa, slow down. You're sending too fast",
     win: 'DEAL!',
     lose: 'NO DEAL!',
     perKg: 'baht/kg',
-    saved: (s) => (s > 0 ? `You saved ${s} baht/kg` : 'Not a single baht off'),
+    saved: (s) => (s > 0 ? `You saved ${s} baht a kilo` : 'You got zero off'),
     turns: (t) => `${t} messages`,
-    loseMsg: 'Som Sri refused to sell. Try a different approach!',
+    loseMsg: "She won't sell to you. Try a different approach!",
     again: 'Play again',
-    share: 'Share result',
-    copied: 'Result copied, send it to your friends!',
-    grades: { S: 'Haggle Master', A: 'Smooth Talker', B: 'Not Bad', C: 'Auntie Wins' },
-    shareText: (p, s, m) => `I haggled Auntie Som Sri's mangoes down to ${p}฿/kg (-${s}฿) with ${m}฿ of my budget left. Can you beat me?`,
-    log: 'Negotiation log',
-    logEmpty: 'Nothing said yet',
+    share: 'Share',
+    copied: 'Copied! Send it to your friends',
+    grades: { S: 'Pro Haggler', A: 'Smooth Talker', B: 'Not Bad', C: 'She Won' },
+    shareText: (p, s, m) => `I got Auntie Som Sri's mangoes down to ${p}฿ a kilo (${s}฿ off) and still had ${m}฿ left. Think you can beat that?`,
+    log: 'Chat history',
+    logEmpty: 'Nothing yet',
     you: 'You',
     vendor: 'Som Sri',
     hints: [
-      'Be polite. Auntie softens for good manners.',
-      'Give reasons: another stall is cheaper, student budget...',
-      'Buying several kilos opens up bigger discounts.',
-      'Chat a little and build rapport before pushing the price.',
-      'Offers that are way too low make her angry.',
-      "She remembers. The same trick won't work twice.",
-      'Every silence raises the price. Stay quiet too long and she chases you off!',
-      "Auntie doesn't know your budget. Try telling her.",
+      'Be nice. She gives better deals to polite people.',
+      'Give her a reason, like another stand is cheaper or money is tight.',
+      'Buying more kilos gets you a bigger discount.',
+      'Chat with her a bit before you ask for a lower price.',
+      'Going way too low just makes her annoyed.',
+      "She remembers what you said. The same trick won't work twice.",
+      "Don't go quiet. The price goes up, and she'll kick you out!",
+      "She doesn't know how much money you have. Try telling her.",
     ],
   },
 };
@@ -510,19 +510,19 @@ const RULES = {
     </div>`,
   en: (m) => `
     <h2>How to play</h2>
-    <p class="mission">Mission: you have <b>${m.budget} baht</b> and must buy <b>${m.kg} kg</b> of mangoes.<br>They start at ${cfg.startPrice} baht/kg. Get the price down to <b>${Math.floor(m.budget / m.kg)} baht/kg</b> or less.</p>
+    <p class="mission">You have <b>${m.budget} baht</b> and need <b>${m.kg} kg</b> of mangoes.<br>They start at ${cfg.startPrice} baht a kilo. Get her down to <b>${Math.floor(m.budget / m.kg)} baht a kilo</b> or less.</p>
     <ol>
-      <li><b>Type anything.</b> Som Sri is an AI that thinks about what you actually say.</li>
-      <li><b>Earn discounts</b> by being polite, giving believable reasons, buying in bulk, charming her, and using real haggling tricks.</li>
-      <li><b>She gets angry</b> at ridiculous offers (like 10 baht) or rudeness and may raise the price. <b>Swear at or insult her and the deal fails instantly!</b></li>
-      <li>She <b>remembers</b> the conversation, so the same trick won't work twice. She doesn't know your budget unless you tell her.</li>
-      <li><b>Don't go quiet:</b> after ${cfg.idleSeconds} seconds of silence the price goes up 5 baht (3 warnings). The 4th time she <b>kicks you out</b> and the deal fails!</li>
-      <li><b>No message limit.</b> Keep haggling as long as you like, just don't go quiet!</li>
-      <li><b>Win:</b> agree on a price within your budget. <b>Lose:</b> the deal fails, you get kicked out, or you can't afford what you agreed.</li>
+      <li><b>Type whatever you want.</b> Som Sri is an AI, so she actually reacts to what you say.</li>
+      <li><b>Want a lower price?</b> Be nice, give her a good reason, buy more, make her laugh, or try some haggling tricks.</li>
+      <li><b>She gets annoyed</b> if you go way too low (like 10 baht) or act rude. <b>Cuss at her or insult her and the deal is off right away!</b></li>
+      <li>She <b>remembers</b> what you said, so the same trick won't work twice. She doesn't know how much money you have unless you tell her.</li>
+      <li><b>Don't go quiet.</b> If you don't say anything for ${cfg.idleSeconds} seconds, the price goes up 5 baht (3 warnings). The 4th time, she <b>kicks you out</b>!</li>
+      <li><b>No message limit.</b> Keep going as long as you want.</li>
+      <li><b>You win</b> if you make a deal you can afford. <b>You lose</b> if the deal falls through, you get kicked out, or you agree to a price you can't pay.</li>
     </ol>
     <div class="row-btns">
       <button class="pbtn alt" data-back>Back</button>
-      <button class="pbtn" data-start="en">Start!</button>
+      <button class="pbtn" data-start="en">Let's go!</button>
     </div>`,
 };
 
