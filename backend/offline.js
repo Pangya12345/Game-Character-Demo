@@ -21,9 +21,26 @@ const LINES = {
     lowball: ['{offer} บาท?! ไปเก็บเองจากต้นไป๊! ต้นทุนป้ายังไม่พอเลย', 'ล้อเล่นใช่ไหม {offer} บาท ค่าน้ำมันรถป้ายังไม่พอเลยลูก!'],
     acceptOffer: ['เฮ้อ... {price} บาทก็ได้ เห็นแก่ความน่ารักหรอกนะ เดี๋ยวป้าห่อให้', 'เอ้า ตกลง {price} บาทจ้ะ ป้าแถมลูกเล็กให้อีกลูกด้วย'],
     deal: ['ตกลงกิโลละ {price} บาทนะจ๊ะ เดี๋ยวป้าเลือกลูกสวย ๆ ให้เลย', 'ได้เลยจ้ะ {price} บาท หวานฉ่ำรับรอง กินแล้วต้องกลับมาอีก'],
-    counter: ['{offer} ไม่ไหวหรอกหนู ป้าให้ {price} บาทละกัน ลดให้แล้วนะ', 'ต่อเก่งจริงนะเรา! {price} บาทเป็นไง ต่ำกว่านี้ป้าเจ๊งแน่'],
-    soften: ['พูดเพราะแบบนี้ป้าก็ใจอ่อนสิ งั้น {price} บาทละกันจ้ะ', 'เออ ๆ เห็นว่าตั้งใจซื้อจริง ป้าให้ {price} บาท'],
-    grumble: ['จะให้ลดเฉย ๆ เหรอ? ให้เหตุผลป้าหน่อยสิ ตอนนี้ {price} บาทจ้ะ', 'มะม่วงหวานขนาดนี้ {price} บาทก็ถูกแล้วพ่อหนุ่ม'],
+    counter: [
+      '{offer} ไม่ไหวหรอกหนู ป้าให้ {price} บาทละกัน ลดให้แล้วนะ',
+      'ต่อเก่งจริงนะเรา! {price} บาทเป็นไง ต่ำกว่านี้ป้าเจ๊งแน่',
+      '{offer} เหรอ... ไม่ได้ ๆ เจอกันครึ่งทาง {price} ก็แล้วกัน',
+      'โห {offer} ป้าขาดทุนตายเลย {price} นี่ใจดีสุดแล้วนะ',
+      'ถ้า {offer} ป้าไปขายเจ้าอื่นดีกว่า เอา {price} ไหมล่ะ?',
+    ],
+    soften: [
+      'พูดเพราะแบบนี้ป้าก็ใจอ่อนสิ งั้น {price} บาทละกันจ้ะ',
+      'เออ ๆ เห็นว่าตั้งใจซื้อจริง ป้าให้ {price} บาท',
+      'ปากหวานนักนะ... ก็ได้ {price} บาท อย่าไปบอกใครล่ะ',
+      'เห็นหน้าแล้วนึกถึงหลานป้า ลดให้เหลือ {price} ละกัน',
+    ],
+    grumble: [
+      'จะให้ลดเฉย ๆ เหรอ? ให้เหตุผลป้าหน่อยสิ ตอนนี้ {price} บาทจ้ะ',
+      'มะม่วงหวานขนาดนี้ {price} บาทก็ถูกแล้วพ่อหนุ่ม',
+      'ลองดมดูสิ หอมขนาดนี้ {price} ไม่แพงหรอกจ้ะ',
+      'ลดหน่อย ๆ ใคร ๆ ก็พูด... แล้วจะเอากี่โลล่ะ? {price} บาทนะ',
+      'ถามราคาเฉย ๆ ป้าก็ตอบเหมือนเดิมแหละ {price} จ้ะ',
+    ],
     floor: ['{price} บาทนี่ต่ำสุดแล้วจริง ๆ ลดกว่านี้ป้าไม่มีกินแล้ว'],
     final: ['คุยวนไปวนมาป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ ไปเถอะไป'],
     severe: ['ปากหมาแบบนี้ป้าไม่ขายให้หรอก! ไปให้พ้นเลย ไป๊!', 'ด่าคนแก่แบบนี้ได้ยังไง! ไม่ขายแล้ว ไปซื้อที่อื่นไป!'],
@@ -33,9 +50,26 @@ const LINES = {
     lowball: ['{offer} baht?! Go pick them off the tree yourself!', "{offer}? That doesn't even pay for my truck's diesel, dear!"],
     acceptOffer: ["Hmph... {price} baht then. Only because you're sweet. Let me bag them.", "Okay, okay, {price} baht. I'll even throw in a small one, na."],
     deal: ['Deal, {price} baht a kilo. Let me pick the nicest ones for you.', "{price} it is! So sweet you'll be back tomorrow, I promise."],
-    counter: ["{offer} is too low, dear. I'll do {price}, that's already a discount.", 'You bargain hard! {price} baht, any lower and I go broke.'],
-    soften: ['Such nice manners, you make auntie soft. {price} baht then.', "Alright, you seem serious. {price} baht for you."],
-    grumble: ["Just 'cheaper' and nothing else? Give auntie a reason. It's {price} baht.", 'Mangoes this sweet at {price}? That is already cheap, young one.'],
+    counter: [
+      "{offer} is too low, dear. I'll do {price}, that's already a discount.",
+      'You bargain hard! {price} baht, any lower and I go broke.',
+      '{offer}? No, no. Meet me halfway: {price}.',
+      "At {offer} I'd lose money. {price} is me being generous.",
+      'For {offer} I would rather sell to the next customer. {price}?',
+    ],
+    soften: [
+      'Such nice manners, you make auntie soft. {price} baht then.',
+      "Alright, you seem serious. {price} baht for you.",
+      "Sweet talker... fine, {price}. Don't tell anyone.",
+      'You remind me of my grandson. {price}, just for you.',
+    ],
+    grumble: [
+      "Just 'cheaper' and nothing else? Give auntie a reason. It's {price} baht.",
+      'Mangoes this sweet at {price}? That is already cheap, young one.',
+      'Smell that! At {price} it is a bargain, dear.',
+      "Everyone says 'cheaper'. How many kilos do you want? It's {price}.",
+      'Asking again gets the same answer: {price}.',
+    ],
     floor: ["{price} is truly my lowest. Any less and auntie doesn't eat tonight."],
     final: ["We've gone round and round, I'm tired. No sale today, off you go."],
     severe: ['With a mouth like that? I will not sell to you. Get away from my stall!', 'How dare you talk to an old woman like that! No sale, go!'],
@@ -43,6 +77,14 @@ const LINES = {
 };
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// Prefer a line she hasn't said yet this conversation.
+function freshLine(options, vars, history) {
+  const said = new Set(history.filter((h) => h.role === 'npc').map((h) => h.text));
+  const lines = options.map((o) => fill(o, vars));
+  const unused = lines.filter((l) => !said.has(l));
+  return pick(unused.length ? unused : lines);
+}
 const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]);
 
 function parseQty(text) {
@@ -62,7 +104,7 @@ function parseOffer(text, qtySpan) {
   return null;
 }
 
-export function offlineReply({ cfg, message, state, finalTurn }) {
+export function offlineReply({ cfg, message, state, finalTurn, history = [] }) {
   const lang = THAI.test(message) ? 'th' : /[a-z]/i.test(message) ? 'en' : state.lang;
   const L = LINES[lang];
   const { qty, span } = parseQty(message);
@@ -126,7 +168,7 @@ export function offlineReply({ cfg, message, state, finalTurn }) {
 
   return {
     detected_language: lang,
-    npc_response: fill(pick(L[key]), { price, offer }),
+    npc_response: freshLine(L[key], { price, offer }, history),
     npc_mood: mood,
     current_price: price,
     deal_closed: closed,

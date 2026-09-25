@@ -90,6 +90,7 @@ export async function negotiate(body, ip = 'unknown') {
     price: clampInt(s.current_price, cfg.floorPrice, cfg.maxPrice, cfg.startPrice),
     turn: clampInt(s.turn, 1, cfg.maxTurns, 1),
     lang: s.lang === 'en' ? 'en' : 'th',
+    daySeed: clampInt(s.day_seed, 0, 9999, 0),
   };
   const ctx = { cfg, message, state, history: sanitizeHistory(body.history), finalTurn: state.turn >= cfg.maxTurns };
 

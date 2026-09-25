@@ -26,6 +26,9 @@ const els = {
 
 /* ---------------- Text (UI follows the language the player types in) ---------------- */
 
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// Several variants per scripted line so the vendor never sounds canned.
 const T = {
   th: {
     mood: 'อารมณ์แม่ค้า:',
@@ -34,13 +37,34 @@ const T = {
     chat: 'พิมพ์แชท:',
     placeholder: 'พิมพ์ต่อราคาได้เลย',
     moods: { neutral: 'เฉยๆ', happy: 'ดีใจ', angry: 'โกรธ', stressed: 'หงุดหงิด' },
-    greet: (p) => `มะม่วงน้ำดอกไม้กิโลละ ${p} บาทจ้ะ พ่อหนุ่ม ราคานี้ลดไม่ได้แล้วน้า`,
+    greet: (p) => pick([
+      `มะม่วงน้ำดอกไม้กิโลละ ${p} บาทจ้ะ พ่อหนุ่ม ราคานี้ลดไม่ได้แล้วน้า`,
+      `เอามะม่วงไหมจ๊ะ หวานฉ่ำ เพิ่งเก็บจากสวนเมื่อเช้า กิโลละ ${p} เท่านั้น`,
+      `ดูได้ จับได้ ชิมไม่ได้นะ! น้ำดอกไม้แท้ ๆ กิโลละ ${p} จ้ะ`,
+      `มาแล้วเหรอ ยืนดูตั้งนาน จะเอากี่โลล่ะ? กิโลละ ${p} บาท`,
+      `ร้อนก็ร้อน... เอามะม่วงไปกินให้ชื่นใจไหมหลาน กิโลละ ${p} ไม่แพงหรอก`,
+    ]),
     idleRaise: [
-      (p) => `ว่าไงพ่อหนุ่ม ยืนเงียบทำไม? ป้าเสียเวลาขาย ขึ้นเป็น ${p} บาทนะ`,
-      (p) => `เงียบอีกแล้ว! ยืนบังร้านป้าอยู่ได้ ${p} บาทเลยเอ้า!`,
-      (p) => `${p} บาท! เตือนครั้งสุดท้ายนะ ยังเงียบอีกป้าไล่จริงด้วย!`,
+      (p) => pick([
+        `ว่าไงพ่อหนุ่ม ยืนเงียบทำไม? ป้าเสียเวลาขาย ขึ้นเป็น ${p} บาทนะ`,
+        `ยืนเหม่ออะไรล่ะ ลูกค้าคนอื่นรออยู่นะ คิดนานก็ ${p} บาทไปเลย`,
+        `เงียบแบบนี้ป้าถือว่าไม่รีบนะ งั้นราคาขึ้นเป็น ${p} บาท`,
+      ]),
+      (p) => pick([
+        `เงียบอีกแล้ว! ยืนบังร้านป้าอยู่ได้ ${p} บาทเลยเอ้า!`,
+        `นี่มาซื้อหรือมาหลบแดดจ๊ะ? ${p} บาทแล้วนะ`,
+        `ป้าไม่มีเวลาทั้งวันนะหนู ${p} บาท จะเอาก็ว่ามา`,
+      ]),
+      (p) => pick([
+        `${p} บาท! เตือนครั้งสุดท้ายนะ ยังเงียบอีกป้าไล่จริงด้วย!`,
+        `ครั้งสุดท้ายแล้วนะ ${p} บาท ไม่พูดอะไรป้าไม่ขายแล้ว!`,
+      ]),
     ],
-    idleKick: 'ไป๊! ไม่ซื้อก็ไปให้พ้น ป้าจะขายคนอื่นแล้ว ไม่ขายให้แล้ว!',
+    idleKick: () => pick([
+      'ไป๊! ไม่ซื้อก็ไปให้พ้น ป้าจะขายคนอื่นแล้ว ไม่ขายให้แล้ว!',
+      'พอแล้ว ๆ ยืนเป็นหุ่นอยู่ได้ ไปเลยไป ป้าจะเก็บร้านแล้ว!',
+      'เสียเวลาป้าจริง ๆ! หลีกไปเลย ให้คนอื่นเขาซื้อบ้าง!',
+    ]),
     kicked: 'โดนไล่!',
     kickedMsg: 'ยืนเงียบนานเกินไป แม่ค้าเลยไล่ไปแล้ว ดีลล่ม!',
     outOfTurns: 'คุยวนไปวนมา ป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ!',
@@ -86,13 +110,34 @@ const T = {
     chat: 'Chat:',
     placeholder: 'Start haggling',
     moods: { neutral: 'Neutral', happy: 'Happy', angry: 'Angry', stressed: 'Annoyed' },
-    greet: (p) => `Nam Dok Mai mangoes, ${p} baht a kilo, dear. That's already my lowest, na.`,
+    greet: (p) => pick([
+      `Nam Dok Mai mangoes, ${p} baht a kilo, dear. That's already my lowest, na.`,
+      `Sweetest mangoes in the market, picked this morning. ${p} a kilo.`,
+      `Look all you want, no tasting! ${p} baht a kilo, dear.`,
+      `You've been staring a while. How many kilos? ${p} baht each.`,
+      `Hot day, isn't it? A cold mango fixes that. Only ${p} a kilo.`,
+    ]),
     idleRaise: [
-      (p) => `Well? Just standing there? You're costing me customers. It's ${p} baht now.`,
-      (p) => `Silent again! You're blocking my stall. ${p} baht!`,
-      (p) => `${p} baht! Last warning, say something or off you go!`,
+      (p) => pick([
+        `Well? Just standing there? You're costing me customers. It's ${p} baht now.`,
+        `Daydreaming? Others are waiting. Take too long and it's ${p}.`,
+        `No hurry, huh? Then neither am I. ${p} baht now.`,
+      ]),
+      (p) => pick([
+        `Silent again! You're blocking my stall. ${p} baht!`,
+        `Are you buying or just hiding from the sun? ${p} baht now.`,
+        `I don't have all day, child. ${p}. Speak up.`,
+      ]),
+      (p) => pick([
+        `${p} baht! Last warning, say something or off you go!`,
+        `Last chance: ${p} baht. One more silence and no sale!`,
+      ]),
     ],
-    idleKick: 'Shoo! Not buying? Then move along, I have real customers. No sale!',
+    idleKick: () => pick([
+      'Shoo! Not buying? Then move along, I have real customers. No sale!',
+      'Enough! Standing there like a statue. Off you go, I am closing up!',
+      'What a waste of my time! Step aside and let someone else buy!',
+    ]),
     kicked: 'KICKED OUT!',
     kickedMsg: 'You stood silent too long and Som Sri chased you off. Deal failed!',
     outOfTurns: "Round and round we go... I'm tired. No sale today!",
@@ -337,7 +382,7 @@ async function onIdle() {
     setMood('angry');
     sfx.angry();
     const gen = S.gen;
-    await npcSay(L().idleKick);
+    await npcSay(L().idleKick());
     if (gen === S.gen) endGame('kicked');
   }
 }
@@ -371,7 +416,7 @@ async function send() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         message: text,
-        state: { current_price: S.price, turn: S.turn, lang: S.lang },
+        state: { current_price: S.price, turn: S.turn, lang: S.lang, day_seed: S.daySeed },
         history: S.history.slice(-24),
       }),
     });
@@ -506,7 +551,8 @@ async function startGame(lang, { newMission = false } = {}) {
   hideOverlay();
   if (newMission) S.mission = pickMission();
   finishTyping();
-  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, gen: S.gen + 1 });
+  // daySeed picks a different "day at the market" for the AI each game
+  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, gen: S.gen + 1, daySeed: Math.floor(Math.random() * 1000) });
   setPrice(cfg.startPrice, { silent: true });
   applyLang();
   setMood('neutral');

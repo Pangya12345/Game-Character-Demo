@@ -113,7 +113,7 @@ async function callGeminiModel(ctx, model, signal) {
       systemInstruction: { parts: [{ text: buildSystemPrompt(cfg) }] },
       contents: [{ role: 'user', parts: [{ text: buildUserPrompt(ctx) }] }],
       generationConfig: {
-        temperature: 0.9,
+        temperature: 1.05,
         responseMimeType: 'application/json',
         responseSchema: GEMINI_SCHEMA,
       },
