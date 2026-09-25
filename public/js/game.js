@@ -483,10 +483,7 @@ function showTitle() {
   setInputEnabled(false);
   S.screen = 'title';
   showOverlay(`
-    <h1>Haggle Market<small>ตลาดต่อราคา</small></h1>
-    <p>Haggle for mangoes with <b>Auntie Som Sri</b>, a sharp-tongued but kind-hearted AI vendor.</p>
-    <p class="en">ต่อราคามะม่วงกับแม่ค้าสมศรี แม่ค้า AI ปากร้ายใจดี</p>
-    <p class="pick">Choose your language · เลือกภาษา</p>
+    <h1>Haggle Market</h1>
     <div class="row-btns">
       <button class="pbtn" data-lang="en">English</button>
       <button class="pbtn alt" data-lang="th">ภาษาไทย</button>
