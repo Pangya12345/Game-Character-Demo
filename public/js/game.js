@@ -508,7 +508,6 @@ const RULES = {
       <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
       <li>ยิ่งได้ราคาถูก เกรดยิ่งสูง (S / A / B / C)</li>
     </ol>
-    <p class="note">พิมพ์ข้อความแล้วกด Enter หรือ SEND · กด HINT (หรือปุ่ม Y) เพื่อขอคำใบ้</p>
     <div class="row-btns">
       <button class="pbtn alt" data-back>ย้อนกลับ</button>
       <button class="pbtn" data-start="th">เริ่มเล่น!</button>
@@ -526,7 +525,6 @@ const RULES = {
       <li><b>Win:</b> agree on a price within your budget. <b>Lose:</b> the deal fails, you get kicked out, or you can't afford what you agreed.</li>
       <li>The cheaper the price, the better your grade (S / A / B / C).</li>
     </ol>
-    <p class="note">Type and press Enter or SEND. Press HINT (or the Y button) for a tip.</p>
     <div class="row-btns">
       <button class="pbtn alt" data-back>Back</button>
       <button class="pbtn" data-start="en">Start!</button>
