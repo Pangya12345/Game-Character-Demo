@@ -9,7 +9,9 @@ const RE = {
   polite: /(ครับ|คับ|ค่ะ|คะ|จ้ะ|จ้า|จ๊ะ|ขอบคุณ|please|kindly|thank)/i,
   charm: /(สวย|ใจดี|น่ารัก|คนเก่ง|ยาย|แม่|ประจำ|อุดหนุน|beautiful|kind|lovely|sweet auntie|regular|come back|every week)/i,
   reason: /(เพราะ|ร้านอื่น|เจ้าอื่น|ร้านโน้น|นักศึกษา|เงินน้อย|งบ|ช้ำ|ลูกเล็ก|because|other (stall|shop)|cheaper|student|budget|bruise|small)/i,
-  rude: /(โกง|ขี้โกง|ห่วย|เหี้ย|ควาย|บ้าป่าว|แพงฉิบ|stupid|scam|rip ?off|idiot|thief|greedy)/i,
+  // swearing / insults: the vendor refuses to sell immediately
+  severe: /(เหี้ย|สัส|สาด|ควาย|อีแก่|แก่หัวงู|ไอ้สัตว์|อีดอก|หน้าหี|ชิบหาย|พ่อมึง|แม่มึง|มึง|กู|fuck|shit|bitch|bastard|asshole|old hag|thief|cheat)/i,
+  rude: /(โกง|ขี้โกง|ห่วย|บ้าป่าว|แพงฉิบ|แพงชะมัด|stupid|scam|rip ?off|idiot|greedy)/i,
   accept: /(ตกลง|เอาเลย|โอเค|ซื้อเลย|เอาตามนั้น|\bok\b|okay|deal|i'?ll take)/i,
 };
 
@@ -24,6 +26,7 @@ const LINES = {
     grumble: ['จะให้ลดเฉย ๆ เหรอ? ให้เหตุผลป้าหน่อยสิ ตอนนี้ {price} บาทจ้ะ', 'มะม่วงหวานขนาดนี้ {price} บาทก็ถูกแล้วพ่อหนุ่ม'],
     floor: ['{price} บาทนี่ต่ำสุดแล้วจริง ๆ ลดกว่านี้ป้าไม่มีกินแล้ว'],
     final: ['คุยวนไปวนมาป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ ไปเถอะไป'],
+    severe: ['ปากหมาแบบนี้ป้าไม่ขายให้หรอก! ไปให้พ้นเลย ไป๊!', 'ด่าคนแก่แบบนี้ได้ยังไง! ไม่ขายแล้ว ไปซื้อที่อื่นไป!'],
   },
   en: {
     rude: ["Watch your mouth, child! For that it's {price} baht now.", 'Such manners! Fine, {price} baht. Take it or leave it!'],
@@ -35,6 +38,7 @@ const LINES = {
     grumble: ["Just 'cheaper' and nothing else? Give auntie a reason. It's {price} baht.", 'Mangoes this sweet at {price}? That is already cheap, young one.'],
     floor: ["{price} is truly my lowest. Any less and auntie doesn't eat tonight."],
     final: ["We've gone round and round, I'm tired. No sale today, off you go."],
+    severe: ['With a mouth like that? I will not sell to you. Get away from my stall!', 'How dare you talk to an old woman like that! No sale, go!'],
   },
 };
 
@@ -109,7 +113,12 @@ export function offlineReply({ cfg, message, state, finalTurn }) {
   }
 
   let failed = false;
-  if (!closed && finalTurn) {
+  if (RE.severe.test(message)) {
+    closed = false;
+    failed = true;
+    mood = 'angry';
+    key = 'severe';
+  } else if (!closed && finalTurn) {
     failed = true;
     mood = 'stressed';
     key = 'final';

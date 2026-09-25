@@ -463,7 +463,7 @@ const RULES = {
     <ol>
       <li><b>พิมพ์คุยได้อิสระ</b> แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ</li>
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
-      <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคาหรือเลิกขายเลย</li>
+      <li><b>แม่ค้าจะโกรธ</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี อาจขึ้นราคา ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
       <li><b>ห้ามเงียบ:</b> ถ้าไม่พิมพ์เกิน ${cfg.idleSeconds} วินาที ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
       <li>คุยได้สูงสุด <b>${cfg.maxTurns} รอบ</b></li>
@@ -481,7 +481,7 @@ const RULES = {
     <ol>
       <li><b>Type anything.</b> Som Sri is an AI that thinks about what you actually say.</li>
       <li><b>Earn discounts</b> by being polite, giving believable reasons, buying in bulk, charming her, and using real haggling tricks.</li>
-      <li><b>She gets angry</b> at ridiculous offers (like 10 baht) or rudeness, and may raise the price or refuse to sell.</li>
+      <li><b>She gets angry</b> at ridiculous offers (like 10 baht) or rudeness and may raise the price. <b>Swear at or insult her and the deal fails instantly!</b></li>
       <li>She <b>remembers</b> the conversation, so the same trick won't work twice. She doesn't know your budget unless you tell her.</li>
       <li><b>Don't go quiet:</b> after ${cfg.idleSeconds} seconds of silence the price goes up 5 baht (3 warnings). The 4th time she <b>kicks you out</b> and the deal fails!</li>
       <li>You have at most <b>${cfg.maxTurns} turns</b>.</li>
