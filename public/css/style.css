@@ -27,9 +27,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 16px;
-  background: #3a2a20;
+  gap: 0;
+  padding: 0;
+  background: #120c08;
   color: var(--cream);
   font-family: var(--font);
   overflow-x: hidden;
@@ -57,8 +57,7 @@ button { cursor: pointer; }
 .console {
   display: flex;
   align-items: stretch;
-  width: min(1180px, 100%);
-  filter: drop-shadow(0 24px 36px rgba(0, 0, 0, .5));
+  width: min(100vw, calc(100dvh * 16 / 9));
 }
 
 .joycon {
@@ -141,10 +140,6 @@ button { cursor: pointer; }
 .bezel {
   flex: 1;
   min-width: 0;
-  background: var(--bezel);
-  padding: clamp(10px, 1.8vw, 22px) clamp(12px, 2.4vw, 32px);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 2px #262626;
 }
 
 /* ---------------- Game screen ---------------- */
@@ -154,7 +149,6 @@ button { cursor: pointer; }
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #000;
-  border-radius: 3px;
   container-type: inline-size;
   user-select: none;
 }
@@ -579,15 +573,33 @@ button { cursor: pointer; }
 }
 .footnote b { color: var(--gold); }
 
-.mobile-controls { display: none; }
+.hud-btns {
+  display: flex;
+  gap: .6cqw;
+  margin-top: .3cqw;
+  pointer-events: auto;
+}
+.hud-btns button {
+  padding: .25em .7em;
+  font-family: var(--font);
+  font-size: clamp(9px, 1.25cqw, 14px);
+  font-weight: 600;
+  color: var(--cream);
+  background: rgba(34, 23, 16, .88);
+  border: max(1px, .2cqw) solid #d9c49b;
+  box-shadow: 0 max(1px, .25cqw) 0 #1a110b;
+}
+.hud-btns button:hover { color: var(--gold); }
+.hud-btns button:active { transform: translateY(1px); box-shadow: none; }
+.footnote { position: fixed; bottom: 4px; left: 0; right: 0; font-size: 11px; pointer-events: none; }
 
 /* ---------------- Phones: stack bubbles & chat under the scene ---------------- */
 @media (max-width: 720px) {
-  body { padding: 8px; justify-content: flex-start; }
-  .joycon { display: none; }
-  .bezel { padding: 8px; border-radius: 10px; }
+  body { justify-content: flex-start; }
+  .console { width: 100%; }
   .screen {
     aspect-ratio: auto;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -621,23 +633,6 @@ button { cursor: pointer; }
   .panel { width: 100%; font-size: 14px; padding: 16px; }
   .log { top: 8px; right: 8px; left: 8px; bottom: 8px; width: auto; font-size: 14px; }
   .toast { font-size: 13px; top: 20px; }
-  .mobile-controls {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .mobile-controls button {
-    padding: 8px 12px;
-    font-size: 12px;
-    font-family: var(--font);
-    color: #ddd;
-    background: #26282b;
-    border: 0;
-    border-radius: 999px;
-    box-shadow: 0 3px 0 #111;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

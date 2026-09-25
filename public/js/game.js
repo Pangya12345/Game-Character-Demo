@@ -246,7 +246,7 @@ function typeNpc(text) {
       els.npcText.textContent = chars.slice(0, i).join('');
       if (i % 2 === 0 && chars[i - 1] !== ' ') sfx.blip();
       if (i >= chars.length) finishTyping();
-    }, 32);
+    }, 18);
   });
 }
 
@@ -601,6 +601,7 @@ const actions = {
   },
   mute: () => toast(sfx.toggleMute() ? '🔇 Sound off' : '🔊 Sound on', 1200),
   restart: () => (S.started ? startGame(S.lang, { newMission: true }) : showTitle()),
+  menu: showTitle,
 };
 
 els.form.addEventListener('submit', (e) => {
@@ -629,18 +630,7 @@ els.overlay.addEventListener('click', (e) => {
   if (e.target.closest('[data-share]')) share();
 });
 
-$('btnMute').addEventListener('click', actions.mute);
-$('btnRestart').addEventListener('click', actions.restart);
-$('btnHome').addEventListener('click', showTitle);
-$('btnLog').addEventListener('click', actions.log);
-$('btnHint').addEventListener('click', actions.hint);
-$('btnA').addEventListener('click', send);
-$('btnB').addEventListener('click', () => {
-  els.input.value = '';
-  renderPlayerBubble('', false);
-  els.input.focus();
-});
-document.querySelectorAll('.mobile-controls [data-act]').forEach((b) => b.addEventListener('click', () => actions[b.dataset.act]()));
+document.querySelectorAll('.hud-btns [data-act]').forEach((b) => b.addEventListener('click', () => actions[b.dataset.act]()));
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !els.log.classList.contains('hidden')) els.log.classList.add('hidden');
@@ -661,7 +651,7 @@ async function boot() {
   els.modeNote.innerHTML =
     cfg.provider === 'offline'
       ? '⚠️ <b>OFFLINE DEMO</b> · ยังไม่ได้ใส่ API key แม่ค้าจะตอบแบบสคริปต์ง่าย ๆ (ใส่ key ใน .env เพื่อใช้ AI จริง)'
-      : `AI: <b>${cfg.provider === 'gemini' ? 'Gemini' : 'Claude'}</b> (${cfg.model})`;
+      : ''; // full-screen game: only show the note when something needs attention
   setPrice(cfg.startPrice, { silent: true });
   applyLang();
   els.npcText.textContent = L().greet(cfg.startPrice);

@@ -55,7 +55,7 @@ MOOD
 
 OUTPUT
 Return ONLY a JSON object:
-{"inner_thoughts": string (private reasoning in English, 1–3 sentences: what the player said, how strong their argument is, what you will do and why),
+{"inner_thoughts": string (private reasoning in English, ONE short sentence: how strong the player's argument is and what you will do),
  "detected_language": "th" | "en",
  "npc_response": string,
  "npc_mood": "neutral" | "happy" | "angry" | "stressed",

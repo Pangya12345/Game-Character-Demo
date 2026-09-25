@@ -57,27 +57,56 @@ async function fetchWithRetry(url, options, attempts = 2) {
   }
 }
 
-// Tries the main model first, then the fallback model if the main one is overloaded or out of quota.
-export async function callGemini(ctx) {
+// Free-tier Gemini latency swings from ~2s to 30s+. To keep the vendor snappy we "hedge":
+// start the main model, and if it hasn't answered after HEDGE_MS (or fails), also start the
+// fallback model; whichever answers first wins. After TOTAL_MS we give up (offline reply).
+const HEDGE_MS = 2500;
+const TOTAL_MS = 9000;
+
+export function callGemini(ctx) {
   const { cfg } = ctx;
   const models = [...new Set([cfg.geminiModel, cfg.geminiFallbackModel].filter(Boolean))];
-  let lastError;
-  for (const model of models) {
-    try {
-      return await callGeminiModel(ctx, model);
-    } catch (err) {
-      lastError = err;
-      if (!RETRYABLE.has(err.status)) throw err;
-      console.warn(`[Gemini] ${model} unavailable (HTTP ${err.status}), trying next model`);
-    }
-  }
-  throw lastError;
+  return new Promise((resolve, reject) => {
+    const controllers = [];
+    let started = 0;
+    let failed = 0;
+    let settled = false;
+    let lastError;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(hedge);
+      clearTimeout(giveUp);
+      controllers.forEach((c) => c.abort());
+      fn(value);
+    };
+    const start = () => {
+      if (settled || started >= models.length) return;
+      const model = models[started++];
+      const ac = new AbortController();
+      controllers.push(ac);
+      callGeminiModel(ctx, model, ac.signal).then(
+        (result) => finish(resolve, result),
+        (err) => {
+          lastError = err;
+          failed++;
+          if (!settled && err.name !== 'AbortError') console.warn(`[Gemini] ${model} failed: ${err.message.slice(0, 120)}`);
+          if (started < models.length) start();
+          else if (failed >= started) finish(reject, lastError);
+        },
+      );
+    };
+    const hedge = setTimeout(start, HEDGE_MS);
+    const giveUp = setTimeout(() => finish(reject, new Error(`Gemini took longer than ${TOTAL_MS}ms`)), TOTAL_MS);
+    start();
+  });
 }
 
-async function callGeminiModel(ctx, model) {
+async function callGeminiModel(ctx, model, signal) {
   const { cfg } = ctx;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  const res = await fetchWithRetry(url, {
+  const res = await fetch(url, {
+    signal,
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.geminiKey },
     body: JSON.stringify({

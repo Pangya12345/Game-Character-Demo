@@ -14,15 +14,9 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="backdrop" aria-hidden="true"></div>
+
 
   <main class="console">
-    <div class="joycon left" aria-label="Left controller">
-      <button class="jc-btn tiny" id="btnMute" title="เปิด/ปิดเสียง · Sound on/off" aria-label="Toggle sound">−</button>
-      <div class="stick" aria-hidden="true"></div>
-      <div class="dpad" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-      <div class="capture" aria-hidden="true"></div>
-    </div>
 
     <div class="bezel">
       <div class="screen" id="screen">
@@ -33,6 +27,11 @@
             <div class="hud-mid">
               <div id="turnVal">รอบ 0/12</div>
               <div class="timer" title="Idle timer"><div id="timerBar"></div></div>
+              <nav class="hud-btns" aria-label="Game controls">
+                <button data-act="hint">HINT</button>
+                <button data-act="restart">RESTART</button>
+                <button data-act="menu">MENU</button>
+              </nav>
             </div>
             <div class="hud-right">
               <div class="hud-box price"><span id="lblPrice">ราคาปัจจุบัน:</span> <b id="priceVal">120฿</b>
@@ -67,23 +66,7 @@
       </div>
     </div>
 
-    <div class="joycon right" aria-label="Right controller">
-      <button class="jc-btn tiny" id="btnRestart" title="เริ่มใหม่ · Restart" aria-label="Restart">+</button>
-      <div class="abxy">
-        <button class="jc-btn x" id="btnLog" title="X: บันทึกการคุย · Chat log">X</button>
-        <button class="jc-btn y" id="btnHint" title="Y: คำใบ้ · Hint">Y</button>
-        <button class="jc-btn a" id="btnA" title="A: ส่งข้อความ · Send">A</button>
-        <button class="jc-btn b" id="btnB" title="B: ล้างข้อความ · Clear">B</button>
-      </div>
-      <div class="stick" aria-hidden="true"></div>
-      <button class="jc-btn home" id="btnHome" title="หน้าแรก · Title screen" aria-label="Title screen"></button>
-    </div>
   </main>
-
-  <nav class="mobile-controls" aria-label="Game controls">
-    <button data-act="hint">HINT</button>
-    <button data-act="restart">RESTART</button>
-  </nav>
 
   <p class="footnote" id="modeNote"></p>
 
