@@ -47,11 +47,11 @@ const LINES = {
   },
   en: {
     rude: ["Hey, watch your mouth! Now it's {price}.", "Wow, rude. Fine, {price}. Take it or leave it."],
-    lowball: ['{offer} baht? Go pick them off the tree yourself!', "{offer}? That doesn't even cover my gas, hon."],
+    lowball: ['{offer} baht? Go pick them off the tree yourself!', "{offer}? That doesn't even cover my gas, honey."],
     acceptOffer: ["Ugh, fine. {price}. Only 'cause you're sweet. Let me bag 'em up.", "Okay, okay, {price}. I'll even throw in a little one."],
     deal: ["Deal. {price} a kilo. I'll pick out the good ones for you.", "{price} it is! You'll be back for more, trust me."],
     counter: [
-      "{offer} is too low, hon. I can do {price}. That's already a deal.",
+      "{offer} is too low, honey. I can do {price}. That's already a deal.",
       "You're tough! {price}. Any lower and I'm losing money.",
       '{offer}? Nah. Meet me in the middle, {price}.',
       "At {offer} I lose money. {price} is me being nice.",
@@ -64,7 +64,7 @@ const LINES = {
       'You remind me of my grandson. {price}, just for you.',
     ],
     grumble: [
-      "Just 'cheaper'? Give me a reason, hon. It's {price}.",
+      "Just 'cheaper'? Give me a reason, honey. It's {price}.",
       "Mangoes this good for {price}? That's already cheap.",
       "Smell that! {price} is a steal.",
       "Everybody says 'cheaper'. How many kilos you want? It's {price}.",

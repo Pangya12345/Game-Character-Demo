@@ -110,7 +110,7 @@ const T = {
     placeholder: 'Type here to haggle',
     moods: { neutral: 'Okay', happy: 'Happy', angry: 'Mad', stressed: 'Annoyed' },
     greet: (p) => pick([
-      `Mangoes! ${p} baht a kilo, hon. That's already a good price.`,
+      `Mangoes! ${p} baht a kilo, honey. That's already a good price.`,
       `Fresh mangoes, picked this morning. ${p} a kilo.`,
       `Look all you want, but no free samples! ${p} a kilo.`,
       `You've been staring for a while. How many kilos? ${p} each.`,
