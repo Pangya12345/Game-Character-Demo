@@ -189,6 +189,9 @@ test('chatting alone never lowers the price; asking does', async () => {
   assert.equal(asksForDiscount('ขอลดหน่อยได้มั้ยครับ', 150), true);
   assert.equal(asksForDiscount('Any chance of a discount?', 150), true);
   assert.equal(asksForDiscount('95 ได้มั้ย', 150), true);
+  assert.equal(asksForDiscount('Can you do a little better?', 150), true);
+  assert.equal(asksForDiscount('How about a better price?', 150), true);
+  assert.equal(asksForDiscount('ขอราคาพิเศษหน่อยครับ', 150), true);
   const chat = (await ask('สวัสดีครับป้า ป้าใจดีจังเลยครับ ผมเป็นนักศึกษา', { current_price: 120 })).json;
   assert.equal(chat.current_price, 120, 'no discount without asking');
 });

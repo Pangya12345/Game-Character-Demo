@@ -1,7 +1,7 @@
 // Core game logic shared by the Express server (local / Render) and the Vercel serverless functions.
 import { getConfig } from './config.js';
 import { callAnthropic, callGemini } from './llm.js';
-import { offlineReply, patienceOutLine } from './offline.js';
+import { chatLine, offlineReply, patienceOutLine } from './offline.js';
 import { asksForDiscount, isConfirmation, matchesLanguage, playerOffer } from './rules.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
@@ -104,8 +104,15 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   const prevOffer = lastPlayer ? playerOffer(lastPlayer.text, cfg.maxPrice) : null;
   // (her asking price equals what they offered last time = she agreed to it)
   if (prevOffer != null && prevOffer === state.price) price = Math.max(price, state.price - 5);
+  // A seasoned vendor gives ground slowly: at most 10 baht per turn, unless she's accepting their own offer.
+  if (price < state.price - 10 && price !== offer) price = state.price - 10;
   // A real vendor doesn't cut the price just because you're chatting: they have to ask.
-  if (price < state.price && !asksForDiscount(message, cfg.maxPrice) && raw?.deal_closed !== true) price = state.price;
+  // If the model cut it anyway, keep the price and swap in a friendly chat line so words and price agree.
+  let chatOnly = false;
+  if (price < state.price && !asksForDiscount(message, cfg.maxPrice) && raw?.deal_closed !== true) {
+    price = state.price;
+    chatOnly = true;
+  }
   // ...and only raise the price when the player was genuinely rude (she's angry).
   if (price > state.price && npc_mood !== 'angry') price = state.price;
 
@@ -148,6 +155,7 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
 
   let npc_response = typeof raw?.npc_response === 'string' ? raw.npc_response.trim().slice(0, 320) : '';
   if (ranOut) npc_response = patienceOutLine(lang, history); // what she says must match what happens
+  else if (chatOnly) npc_response = chatLine(lang, history);
   if (!npc_response) {
     npc_response = lang === 'th' ? 'ว่าไงนะ ป้าฟังไม่ทัน พูดใหม่ซิ' : "Sorry, I didn't catch that. Say it again?";
   }

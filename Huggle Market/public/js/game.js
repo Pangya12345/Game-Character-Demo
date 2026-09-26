@@ -675,6 +675,7 @@ const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognizer = null;
 let listening = false;
 const SILENCE_MS = 900; // pause this long after speaking and the mic closes (nothing is sent until you press Enter/SEND)
+const MAX_LISTEN_MS = 15000; // her patience pauses while you talk, so one turn of talking can't last forever
 
 function setListening(on) {
   listening = on;
@@ -747,6 +748,7 @@ function toggleListening() {
   };
   rec.onend = () => {
     clearTimeout(silenceTimer);
+    clearTimeout(maxTimer);
     if (recognizer && recognizer !== rec) return; // a newer mic session is running; leave it alone
     recognizer = null;
     setListening(false);
@@ -756,12 +758,14 @@ function toggleListening() {
     if (heard) els.input.focus();
   };
 
+  const maxTimer = setTimeout(finish, MAX_LISTEN_MS);
   try {
     rec.start();
     recognizer = rec;
     setListening(true);
     sfx.tick();
   } catch {
+    clearTimeout(maxTimer);
     setListening(false);
     toast(L().micError, 2500);
   }

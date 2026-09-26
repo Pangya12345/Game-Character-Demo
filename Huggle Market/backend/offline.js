@@ -114,6 +114,7 @@ function parseQty(text) {
 }
 
 export const patienceOutLine = (lang, history = []) => freshLine(LINES[lang].patienceOut, {}, history);
+export const chatLine = (lang, history = []) => freshLine(LINES[lang].chat, {}, history);
 
 export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 }) {
   const lang = state.lang;
@@ -142,7 +143,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     mood = 'happy';
     key = closed ? 'deal' : 'acceptOffer';
   } else if (offer != null) {
-    const step = Math.min(12, 3 + polite * 3 + charm * 3 + reason * 3 + (qty >= 3 ? 3 : qty >= 2 ? 2 : 0));
+    const step = Math.min(10, 2 + polite * 2 + charm * 2 + reason * 2 + (qty >= 3 ? 3 : qty >= 2 ? 1 : 0));
     const willing = Math.max(cfg.floorPrice, price - step);
     if (offer >= willing) {
       // she agrees to their price but the buyer still has to confirm
