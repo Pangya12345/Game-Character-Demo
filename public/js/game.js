@@ -271,6 +271,7 @@ const S = {
   idleStrikes: 0,
   wrongLang: 0,
   patience: 100,
+  lastKeyAt: 0,
   mission: MISSIONS[0],
   gen: 0, // bumps on every (re)start so stale async replies are ignored
 };
@@ -413,6 +414,9 @@ async function npcSay(text) {
 // without sending, drops when you annoy her, grows a little when you're nice, and at 0 she
 // sends you away. It pauses while she's talking or listening to you.
 const PATIENCE_DRAIN = 1; // per second of silence (100 -> 0 in about 100 s)
+// While you're actively typing she waits more patiently: everything runs at about a third of the speed.
+const TYPING_SLOWDOWN = 0.35;
+const TYPING_GRACE_MS = 4000; // counts as "typing" if a key was pressed in the last 4 s
 const IDLE_RAISE = 5; // every idleSeconds of silence she grumbles and adds 5 baht
 
 function setPatience(next, { silent = false } = {}) {
@@ -437,12 +441,14 @@ setInterval(() => {
   document.querySelector('.timer').classList.toggle('paused', !running);
   if (!running) return;
 
+  const typingNow = els.input.value.trim() !== '' && now - S.lastKeyAt < TYPING_GRACE_MS;
+  const rate = typingNow ? TYPING_SLOWDOWN : 1;
   const before = Math.ceil(S.patience);
-  setPatience(S.patience - PATIENCE_DRAIN * dt, { silent: true });
+  setPatience(S.patience - PATIENCE_DRAIN * rate * dt, { silent: true });
   if (S.patience <= 10 && Math.ceil(S.patience) !== before) sfx.tick();
   if (S.patience <= 0) return runOutOfPatience();
 
-  S.idleLeft = Math.max(0, S.idleLeft - dt);
+  S.idleLeft = Math.max(0, S.idleLeft - rate * dt);
   if (S.idleLeft <= 0) onIdle();
 }, 100);
 
@@ -714,7 +720,7 @@ const RULES = {
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะหงุดหงิดและไม่ลดให้</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
-      <li><b>ความอดทนของแม่ค้า:</b> แถบด้านบนจะลดลงเรื่อย ๆ ตอนเงียบหรือพิมพ์ค้างไว้ไม่ส่ง และลดเมื่อต่อต่ำเกินเหตุ ถามซ้ำ พูดไม่ดี หรือพูดผิดภาษา แต่จะ<b>เพิ่มขึ้น</b>เมื่อพูดสุภาพ ให้เหตุผลดี หรือชวนคุยถูกใจ ถ้าเงียบนาน ${cfg.idleSeconds} วินาที แม่ค้าจะบ่นและขึ้นราคา 5 บาท <b>ความอดทนหมด = โดนไล่ ดีลล่ม!</b></li>
+      <li><b>ความอดทนของแม่ค้า:</b> แถบด้านบนจะลดลงเรื่อย ๆ ตอนเงียบ (ระหว่างกำลังพิมพ์จะลดช้าลง แต่ไม่หยุด) และลดเมื่อต่อต่ำเกินเหตุ ถามซ้ำ พูดไม่ดี หรือพูดผิดภาษา แต่จะ<b>เพิ่มขึ้น</b>เมื่อพูดสุภาพ ให้เหตุผลดี หรือชวนคุยถูกใจ ถ้าเงียบนาน ${cfg.idleSeconds} วินาที แม่ค้าจะบ่นและขึ้นราคา 5 บาท <b>ความอดทนหมด = โดนไล่ ดีลล่ม!</b></li>
       <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
       <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ (แม่ค้ายอมราคาแล้วต้อง<b>พิมพ์ยืนยัน</b> เช่น "ตกลง" หรือ "เอาเลย" ถึงจะซื้อ ยังไม่ยืนยันก็ต่อต่อได้) &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
     </ol>
@@ -730,7 +736,7 @@ const RULES = {
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
       <li><b>Lowball offers</b> and rudeness annoy her, and she won't drop the price. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
-      <li><b>Patience bar:</b> it drains while you're silent or typing without sending, and drops when you lowball, repeat yourself, act rude or use the wrong language. Being polite, giving good reasons and friendly chat <b>raise</b> it. Every ${cfg.idleSeconds}s of silence she grumbles and adds 5฿. <b>At zero she kicks you out!</b></li>
+      <li><b>Patience bar:</b> it drains while you're silent (slower while you're typing, but it never stops), and drops when you lowball, repeat yourself, act rude or use the wrong language. Being polite, giving good reasons and friendly chat <b>raise</b> it. Every ${cfg.idleSeconds}s of silence she grumbles and adds 5฿. <b>At zero she kicks you out!</b></li>
       <li><b>No message limit.</b></li>
       <li><b>WIN:</b> close a deal within your budget. When she agrees to a price, <b>confirm</b> it ("deal", "I'll take it") to buy, or keep haggling. <b>LOSE:</b> the deal fails, you get kicked out, or you can't afford the price.</li>
     </ol>
@@ -861,7 +867,8 @@ els.form.addEventListener('submit', (e) => {
 
 els.input.addEventListener('input', () => {
   if (S.busy || S.over) return;
-  // typing does NOT pause her patience: only sending a message resets the timer
+  // typing doesn't stop her patience draining, it only slows it down (see TYPING_SLOWDOWN)
+  S.lastKeyAt = performance.now();
   renderPlayerBubble(els.input.value, true);
 });
 els.input.addEventListener('blur', () => {
