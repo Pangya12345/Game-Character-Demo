@@ -137,6 +137,12 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
     npc_mood = 'angry';
     ranOut = true;
   }
+  // why it ended, so the result screen can say it honestly
+  const end_reason = !deal_failed ? undefined
+    : repeatLvl >= 4 ? 'repeat'
+      : ranOut ? 'patience'
+        : change <= -60 ? 'insult' // she refused over something that emptied her patience at once
+          : 'refused';
 
   let npc_response = typeof raw?.npc_response === 'string' ? raw.npc_response.trim().slice(0, 320) : '';
   if (ranOut) npc_response = patienceOutLine(lang, history); // what she says must match what happens
@@ -149,7 +155,7 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
     npc_response = npc_response.replace(new RegExp(`(^|\\D)${aiPrice}(?!\\d)`, 'g'), `$1${price}`);
   }
 
-  return { detected_language: lang, npc_response, npc_mood, current_price: price, deal_closed, deal_failed, patience };
+  return { detected_language: lang, npc_response, npc_mood, current_price: price, deal_closed, deal_failed, patience, ...(end_reason ? { end_reason } : {}) };
 }
 
 export function publicConfig() {

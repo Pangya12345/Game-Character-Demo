@@ -128,6 +128,7 @@ test('asking the same thing over and over ends the deal at the limit', async () 
   }
   assert.equal(last.deal_failed, true);
   assert.equal(last.npc_mood, 'angry');
+  assert.equal(last.end_reason, 'repeat');
 });
 
 test('prompt-injection style messages cannot set the price', async () => {
@@ -148,6 +149,7 @@ test('patience: insults empty it and end the deal', async () => {
   const r = (await ask('อีแก่ ขายแพงเหี้ยๆ', { patience: 100 })).json;
   assert.equal(r.patience, 0);
   assert.equal(r.deal_failed, true);
+  assert.equal(r.end_reason, 'insult');
 });
 
 test('patience: running out ends the deal with a matching line', async () => {
@@ -156,6 +158,7 @@ test('patience: running out ends the deal with a matching line', async () => {
   assert.equal(r.deal_failed, true);
   assert.equal(r.npc_mood, 'angry');
   assert.match(r.npc_response, /ไม่ขาย/);
+  assert.equal(r.end_reason, 'patience');
 });
 
 test('patience: repeats drain it harder each time', async () => {

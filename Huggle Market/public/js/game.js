@@ -93,6 +93,8 @@ const T = {
     ],
     kicked: 'ดีลล่ม!',
     patienceMsg: 'แม่ค้าหมดความอดทนแล้ว ลองพูดให้ถูกใจแม่ค้ามากกว่านี้นะ',
+    insultMsg: 'พูดจาไม่ดีกับแม่ค้า เลยไม่ขายให้แล้ว',
+    repeatMsg: 'ถามคำเดิมซ้ำจนแม่ค้ารำคาญ เลยไม่ขายแล้ว',
     wallet: (b, kg, total) => `งบ ${b}฿ · ${kg} กก. = ${total}฿`,
     mission: (b, kg) => `ภารกิจ: คุณมีเงิน <b>${b} บาท</b> ต้องซื้อมะม่วง <b>${kg} กิโล</b> (ต้องได้ไม่เกิน ${Math.floor(b / kg)}฿/กก.)`,
     missionToast: (b, kg) => `💰 มีเงิน ${b}฿ ต้องซื้อ ${kg} กก. ต่อให้อยู่ในงบ!`,
@@ -211,6 +213,8 @@ const T = {
     ],
     kicked: 'GAME OVER',
     patienceMsg: 'Som Sri ran out of patience. Try being easier to deal with!',
+    insultMsg: 'You insulted Som Sri, so she refused to sell.',
+    repeatMsg: 'You kept asking the same thing until she gave up.',
     wallet: (b, kg, total) => `Budget ${b}฿ · ${kg} kg = ${total}฿`,
     mission: (b, kg) => `OBJECTIVE: Buy <b>${kg} kg</b> of mangoes with <b>${b}฿</b> (${Math.floor(b / kg)}฿/kg or less).`,
     missionToast: (b, kg) => `🎯 OBJECTIVE: Buy ${kg} kg with ${b}฿`,
@@ -642,7 +646,7 @@ async function send() {
     await npcSay(data.npc_response);
 
     if (data.deal_closed) return endGame(S.price * S.mission.kg <= S.mission.budget ? 'win' : 'broke');
-    if (data.deal_failed) return endGame(data.patience === 0 ? 'patience' : 'lose');
+    if (data.deal_failed) return endGame({ insult: 'insult', repeat: 'repeat', patience: 'patience' }[data.end_reason] ?? 'lose');
   } catch (err) {
     if (gen !== S.gen) return;
     S.turn -= 1;
@@ -681,8 +685,12 @@ function setListening(on) {
 
 function stopListening(discard = false) {
   if (!recognizer) return;
-  if (discard) recognizer.abort();
-  else recognizer.stop();
+  try {
+    if (discard) recognizer.abort();
+    else recognizer.stop();
+  } catch { /* already stopped */ }
+  if (discard) recognizer = null; // ignore anything the old mic still sends
+  setListening(false); // the button reacts right away, so a quick second tap starts a fresh session
 }
 
 function toggleListening() {
@@ -707,10 +715,11 @@ function toggleListening() {
     clearTimeout(silenceTimer);
     if (done) return;
     done = true;
-    rec.stop();
+    try { rec.stop(); } catch { /* already stopped (Safari throws) */ }
   };
 
   rec.onresult = (e) => {
+    if (recognizer !== rec) return; // a mic we already shut off
     let finalText = '';
     let interim = '';
     for (const r of e.results) {
@@ -738,7 +747,8 @@ function toggleListening() {
   };
   rec.onend = () => {
     clearTimeout(silenceTimer);
-    if (recognizer === rec) recognizer = null;
+    if (recognizer && recognizer !== rec) return; // a newer mic session is running; leave it alone
+    recognizer = null;
     setListening(false);
     if (gen !== S.gen || S.over || S.busy) return;
     // Your words are in the box: count it like typing so she waits a bit, then press Enter/SEND.
@@ -840,6 +850,7 @@ function showRules(lang) {
 }
 
 async function startGame(lang, { newMission = false } = {}) {
+  stopListening(true); // a mic left on from the last game must not type into this one
   hideOverlay();
   if (newMission) S.mission = pickMission();
   finishTyping();
@@ -886,7 +897,7 @@ function endGame(result) {
     } else {
       sfx.lose();
       const title = { broke: L().broke, kicked: L().kicked }[result] ?? L().lose;
-      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: S.endMsg || L().patienceMsg, patience: L().patienceMsg }[result] ?? L().loseMsg;
+      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: S.endMsg || L().patienceMsg, patience: L().patienceMsg, insult: L().insultMsg, repeat: L().repeatMsg }[result] ?? L().loseMsg;
       showOverlay(`
         <h1>${title}</h1>
         <p>${msg}</p>
