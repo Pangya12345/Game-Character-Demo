@@ -146,12 +146,14 @@ function numbersNote(cfg, state, history, message) {
   const kilos = mentionedKilos([...playerTexts, message]);
   const lastOffer = playerTexts.length ? playerOffer(playerTexts[playerTexts.length - 1], cfg.maxPrice) : null;
   const down = cfg.startPrice - state.price;
+  const askedKilos = kilos != null || history.some((h) => h.role === 'npc' && /(กี่โล|กี่กิโล|how many kilo|how many kg|how much do you need|how many you need)/i.test(h.text));
   return `NUMBERS (already worked out for you)
 - player's offer in this message: ${offer != null ? `${offer} baht/kg (${state.price - offer > 0 ? `${state.price - offer} baht below your price` : 'at or above your price'})` : 'none'}
 - kilos the player has mentioned: ${kilos != null ? kilos : 'not said yet'}
 - you have come down ${down > 0 ? `${down} baht` : 'nothing'} from ${cfg.startPrice} so far
 - room left above your secret limit: ${state.price - cfg.floorPrice} baht (the less room, the smaller your concessions)
-- you already agreed to their last offer: ${lastOffer != null && lastOffer === state.price ? `yes (${lastOffer})` : 'no'}`;
+- you already agreed to their last offer: ${lastOffer != null && lastOffer === state.price ? `yes (${lastOffer})` : 'no'}
+- you already asked how many kilos: ${askedKilos ? 'YES: do NOT ask about kilos again' : 'no'}`;
 }
 
 export function buildUserPrompt({ cfg, message, state, history, repeatLvl = 0, asked = true }) {

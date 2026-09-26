@@ -40,7 +40,6 @@ export function playerOffer(message, maxPrice) {
 // Questions ask for something; they don't accept anything ("110 ได้ไหม?", "how about 100?").
 const QUESTION = /(\?|ไหม|มั้ย|หรือเปล่า|รึเปล่า|หรือยัง|\bhow about\b|\bwhat about\b|\bcould you\b|\bcan you\b|\bwould you\b|\bwill you\b)/i;
 
-// Scripted fallback: does the message clearly say "yes, I'll buy"?
 // Is the player actually asking for a lower price (or making an offer) in this message?
 // Just chatting ("I'm buying for my mom") is not asking, so the price shouldn't move.
 const ASK = /(ลด|ถูกกว่า|ถูกลง|ถูก ๆ|ถูกๆ|ถูกหน่อย|ต่อราคา|ต่อหน่อย|ต่อได้|ต่ออีก|หย่อน|ราคาพิเศษ|ขอราคา|แพง|ส่วนลด|แถม|เจอกันครึ่งทาง|งบ|\bdiscount|\bcheap|\blower\b|\bless\b|\bdeal\b|\bbetter\b|\breduce|\bbargain|\bnegotiat|too (much|expensive|pricey)|\bexpensive\b|\bpricey\b|best price|\bknock\b|come down|go down|\boff\b|\bbudget\b|\bafford|any chance|how about|what about|can you do|could you do|meet (me )?(in the middle|halfway))/i;
@@ -55,6 +54,23 @@ export function mentionedKilos(texts) {
     for (const m of t.matchAll(KILOS)) kilos = KILO_WORDS[m[1].toLowerCase()] ?? parseFloat(m[1]);
   }
   return kilos;
+}
+
+// Has the kilo question already been settled (she asked before, or the player said an amount)?
+const KILO_QUESTION = /(กี่โล|กี่กิโล|how many kilo|how many kg|how much do you need|how many you need|how many are you)/i;
+export const kiloQuestionDone = (history, message) =>
+  mentionedKilos([...history.filter((h) => h.role === 'player').map((h) => h.text), message]) != null ||
+  history.some((h) => h.role === 'npc' && KILO_QUESTION.test(h.text));
+
+// Drop a repeated "how many kilos?" from her reply, keeping the rest of what she said.
+export function dropKiloQuestion(text) {
+  const m = KILO_QUESTION.exec(text);
+  if (!m) return text;
+  const start = Math.max(text.lastIndexOf(' ', m.index), text.lastIndexOf('.', m.index), text.lastIndexOf('!', m.index), text.lastIndexOf(',', m.index));
+  const qEnd = text.indexOf('?', m.index);
+  const end = qEnd === -1 ? text.length : qEnd + 1;
+  const cut = (text.slice(0, start + 1) + text.slice(end)).replace(/\s+/g, ' ').replace(/\s*(ว่าแต่|แล้ว|so|and)\s*$/i, '').trim();
+  return cut.length >= 8 ? cut : text; // never leave her with almost nothing to say
 }
 
 // Scripted fallback: does the message clearly say "yes, I'll buy"?

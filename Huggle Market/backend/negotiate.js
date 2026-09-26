@@ -2,7 +2,7 @@
 import { getConfig } from './config.js';
 import { callAnthropic, callGemini } from './llm.js';
 import { chatLine, offlineReply, patienceOutLine } from './offline.js';
-import { asksForDiscount, isConfirmation, matchesLanguage, playerOffer } from './rules.js';
+import { asksForDiscount, dropKiloQuestion, isConfirmation, kiloQuestionDone, matchesLanguage, playerOffer } from './rules.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
 const MAX_MESSAGE = 280;
@@ -159,6 +159,8 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   let npc_response = typeof raw?.npc_response === 'string' ? raw.npc_response.trim().slice(0, 320) : '';
   if (ranOut) npc_response = patienceOutLine(lang, history); // what she says must match what happens
   else if (chatOnly) npc_response = chatLine(lang, history);
+  // She already asked (or they already said) how many kilos: a real vendor doesn't keep asking.
+  if (kiloQuestionDone(history, message)) npc_response = dropKiloQuestion(npc_response);
   if (!npc_response) {
     npc_response = lang === 'th' ? 'ว่าไงนะ ป้าฟังไม่ทัน พูดใหม่ซิ' : "Sorry, I didn't catch that. Say it again?";
   }

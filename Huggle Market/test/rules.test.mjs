@@ -222,3 +222,13 @@ test('a bare "cheaper please" earns 3 baht at most', async () => {
   const r = (await ask('ลดหน่อย', { current_price: 120 })).json;
   assert.ok(r.current_price >= 117, String(r.current_price));
 });
+
+test('the kilo question is not repeated', async () => {
+  const { dropKiloQuestion, kiloQuestionDone } = await import('../backend/rules.js');
+  assert.equal(dropKiloQuestion('ราคานี้คุ้มจะตาย ว่าแต่จะเอาสักกี่โลล่ะจ๊ะ?'), 'ราคานี้คุ้มจะตาย');
+  assert.equal(dropKiloQuestion('115 is my price. How many kilos do you want?'), '115 is my price.');
+  assert.equal(dropKiloQuestion('จะเอากี่โล?'), 'จะเอากี่โล?', 'keeps the line if nothing else would be left');
+  assert.equal(kiloQuestionDone([{ role: 'npc', text: 'จะเอากี่โลจ๊ะ' }], 'ลดหน่อย'), true);
+  assert.equal(kiloQuestionDone([], 'ขอ 5 โลครับ'), true);
+  assert.equal(kiloQuestionDone([], 'ลดหน่อย'), false);
+});
