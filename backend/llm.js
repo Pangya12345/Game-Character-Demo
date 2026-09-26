@@ -1,7 +1,7 @@
 import { buildSystemPrompt, buildUserPrompt } from './prompt.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
-const FIELDS = ['inner_thoughts', 'detected_language', 'npc_response', 'npc_mood', 'current_price', 'deal_closed', 'deal_failed'];
+const FIELDS = ['inner_thoughts', 'detected_language', 'npc_response', 'npc_mood', 'current_price', 'deal_closed', 'deal_failed', 'patience_change'];
 const TIMEOUT_MS = 30000;
 
 // JSON Schema used by Claude tool-use (forces structured output).
@@ -15,6 +15,7 @@ const JSON_SCHEMA = {
     current_price: { type: 'integer' },
     deal_closed: { type: 'boolean' },
     deal_failed: { type: 'boolean' },
+    patience_change: { type: 'integer' },
   },
   required: FIELDS,
 };
@@ -30,6 +31,7 @@ const GEMINI_SCHEMA = {
     current_price: { type: 'INTEGER' },
     deal_closed: { type: 'BOOLEAN' },
     deal_failed: { type: 'BOOLEAN' },
+    patience_change: { type: 'INTEGER' },
   },
   required: FIELDS,
   propertyOrdering: FIELDS,

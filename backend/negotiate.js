@@ -1,7 +1,7 @@
 // Core game logic shared by the Express server (local / Render) and the Vercel serverless functions.
 import { getConfig } from './config.js';
 import { callAnthropic, callGemini } from './llm.js';
-import { offlineReply } from './offline.js';
+import { offlineReply, patienceOutLine } from './offline.js';
 import { isConfirmation, matchesLanguage, playerOffer } from './rules.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
@@ -119,7 +119,25 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
     if (repeatLvl >= 4) deal_failed = true;
   }
 
+  // ---- Patience (0-100): one meter for everything that wears her down or wins her over ----
+  let change = Math.round(Number(raw?.patience_change));
+  if (!Number.isFinite(change)) change = 0;
+  change = Math.max(-40, Math.min(12, change));
+  if (offer != null && offer < cfg.floorPrice * 0.65) change = Math.min(change, -12); // silly lowball
+  if (repeatLvl > 0) change = Math.min(change, -(8 + 6 * repeatLvl)); // asking the same thing again
+  if (npc_mood === 'angry') change = Math.min(change, -10);
+  let patience = Math.max(0, Math.min(100, state.patience + change));
+  if (deal_closed) patience = Math.max(patience, state.patience);
+  if (deal_failed) patience = 0;
+  let ranOut = false;
+  if (patience === 0 && !deal_closed && !deal_failed) {
+    deal_failed = true;
+    npc_mood = 'angry';
+    ranOut = true;
+  }
+
   let npc_response = typeof raw?.npc_response === 'string' ? raw.npc_response.trim().slice(0, 320) : '';
+  if (ranOut) npc_response = patienceOutLine(lang, history); // what she says must match what happens
   if (!npc_response) {
     npc_response = lang === 'th' ? 'ว่าไงนะ ป้าฟังไม่ทัน พูดใหม่ซิ' : "Sorry, I didn't catch that. Say it again?";
   }
@@ -129,7 +147,7 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
     npc_response = npc_response.replace(new RegExp(`(^|\\D)${aiPrice}(?!\\d)`, 'g'), `$1${price}`);
   }
 
-  return { detected_language: lang, npc_response, npc_mood, current_price: price, deal_closed, deal_failed };
+  return { detected_language: lang, npc_response, npc_mood, current_price: price, deal_closed, deal_failed, patience };
 }
 
 export function publicConfig() {
@@ -160,6 +178,7 @@ export async function negotiate(body, ip = 'unknown') {
     turn: clampInt(s.turn, 1, 9999, 1),
     lang: s.lang === 'en' ? 'en' : 'th',
     daySeed: clampInt(s.day_seed, 0, 9999, 0),
+    patience: clampInt(s.patience, 0, 100, 100),
   };
   if (!matchesLanguage(message, state.lang)) return { status: 400, json: { error: 'wrong_language', expected: state.lang } };
   const history = sanitizeHistory(body.history);

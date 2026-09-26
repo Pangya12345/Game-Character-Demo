@@ -10,6 +10,7 @@ const els = {
   pricePop: $('pricePop'),
   turnVal: $('turnVal'),
   timerBar: $('timerBar'),
+  patiencePop: $('patiencePop'),
   npcBubble: $('npcBubble'),
   npcText: $('npcText'),
   playerBubble: $('playerBubble'),
@@ -74,7 +75,8 @@ const T = {
       'เสียเวลาป้าจริง ๆ! หลีกไปเลย ให้คนอื่นเขาซื้อบ้าง!',
     ]),
     kicked: 'โดนไล่!',
-    kickedMsg: 'ยืนเงียบนานเกินไป แม่ค้าเลยไล่ไปแล้ว ดีลล่ม!',
+    kickedMsg: 'แม่ค้าหมดความอดทน เลยไล่ไปแล้ว ดีลล่ม!',
+    patienceMsg: 'แม่ค้าหมดความอดทนแล้ว ลองพูดให้ถูกใจแม่ค้ามากกว่านี้นะ',
     wallet: (b, kg, total) => `งบ ${b}฿ · ${kg} กก. = ${total}฿`,
     mission: (b, kg) => `ภารกิจ: คุณมีเงิน <b>${b} บาท</b> ต้องซื้อมะม่วง <b>${kg} กิโล</b> (ต้องได้ไม่เกิน ${Math.floor(b / kg)}฿/กก.)`,
     missionToast: (b, kg) => `💰 มีเงิน ${b}฿ ต้องซื้อ ${kg} กก. ต่อให้อยู่ในงบ!`,
@@ -113,7 +115,6 @@ const T = {
     ],
     wrongLangKick: 'ไม่ไหวแล้ว ๆ คุยกันไม่รู้เรื่อง ไปหาคนแปลมาก่อนแล้วค่อยมาซื้อนะ!',
     wrongLangHistory: '(พูดภาษาที่แม่ค้าฟังไม่ออก)',
-    langKickedMsg: 'คุยกันไม่รู้เรื่อง แม่ค้าเลยไม่ขายให้แล้ว ดีลล่ม!',
     win: 'ดีลสำเร็จ!',
     lose: 'ดีลล่ม!',
     perKg: 'บาท/กก.',
@@ -137,7 +138,7 @@ const T = {
       'ชวนคุยเรื่องอื่นบ้าง สร้างความสนิทก่อนค่อยต่อราคา',
       'ต่อราคาต่ำเกินไป แม่ค้าจะหงุดหงิดและไม่ลดให้',
       'ใช้มุกเดิมซ้ำ ๆ ไม่ได้ผลนะ แม่ค้าจำได้',
-      'ยิ่งยืนเงียบ แม่ค้ายิ่งขึ้นราคา เงียบนานเกินไปจะโดนไล่!',
+      'ดูแถบความอดทนไว้ พูดดีมันจะเพิ่ม กวนใจหรือเงียบนานมันจะลด ถ้าหมดโดนไล่!',
       'แม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ลองบอกงบของคุณดูสิ',
     ],
   },
@@ -176,7 +177,8 @@ const T = {
       "You're wasting my time. Step aside and let someone else buy!",
     ]),
     kicked: 'GAME OVER',
-    kickedMsg: 'You were idle too long. Som Sri kicked you out.',
+    kickedMsg: 'Som Sri ran out of patience and sent you away.',
+    patienceMsg: 'Som Sri ran out of patience. Try being easier to deal with!',
     wallet: (b, kg, total) => `Budget ${b}฿ · ${kg} kg = ${total}฿`,
     mission: (b, kg) => `OBJECTIVE: Buy <b>${kg} kg</b> of mangoes with <b>${b}฿</b> (${Math.floor(b / kg)}฿/kg or less).`,
     missionToast: (b, kg) => `🎯 OBJECTIVE: Buy ${kg} kg with ${b}฿`,
@@ -213,7 +215,6 @@ const T = {
     ],
     wrongLangKick: 'Sorry, I give up. Bring a friend who speaks English and come back later!',
     wrongLangHistory: '(said something Som Sri could not understand)',
-    langKickedMsg: 'You kept using the wrong language, so she gave up on you.',
     win: 'YOU WIN!',
     lose: 'GAME OVER',
     perKg: '฿/kg',
@@ -237,7 +238,7 @@ const T = {
       'TIP: Build rapport before asking for a lower price.',
       'TIP: Lowball offers only annoy her.',
       "TIP: She remembers everything. Tricks won't work twice.",
-      'TIP: Staying idle raises the price. Too long and you get kicked out.',
+      'TIP: Watch her patience bar. Being nice raises it; silence and annoying her drain it.',
       "TIP: She doesn't know your budget. Try telling her.",
     ],
   },
@@ -269,6 +270,7 @@ const S = {
   idleLeft: 25,
   idleStrikes: 0,
   wrongLang: 0,
+  patience: 100,
   mission: MISSIONS[0],
   gen: 0, // bumps on every (re)start so stale async replies are ignored
 };
@@ -405,7 +407,26 @@ async function npcSay(text) {
   await typeNpc(text);
 }
 
-/* ---------------- Idle timer ---------------- */
+/* ---------------- Patience ---------------- */
+
+// One meter (0-100) like a real person's patience. It drains while you're silent or typing
+// without sending, drops when you annoy her, grows a little when you're nice, and at 0 she
+// sends you away. It pauses while she's talking or listening to you.
+const PATIENCE_DRAIN = 1; // per second of silence (100 -> 0 in about 100 s)
+const IDLE_RAISE = 5; // every idleSeconds of silence she grumbles and adds 5 baht
+
+function setPatience(next, { silent = false } = {}) {
+  const value = Math.max(0, Math.min(100, next));
+  const diff = Math.round(value) - Math.round(S.patience);
+  S.patience = value;
+  els.timerBar.style.width = `${value}%`;
+  els.timerBar.dataset.level = value <= 25 ? 'low' : value <= 55 ? 'mid' : 'ok';
+  if (silent || Math.abs(diff) < 2) return;
+  els.patiencePop.className = 'patience-pop';
+  void els.patiencePop.offsetWidth; // restart the animation
+  els.patiencePop.textContent = `${diff > 0 ? '+' : ''}${diff}`;
+  els.patiencePop.classList.add('show', diff > 0 ? 'up' : 'down');
+}
 
 let lastTick = performance.now();
 setInterval(() => {
@@ -416,44 +437,43 @@ setInterval(() => {
   document.querySelector('.timer').classList.toggle('paused', !running);
   if (!running) return;
 
-  const before = Math.ceil(S.idleLeft);
+  const before = Math.ceil(S.patience);
+  setPatience(S.patience - PATIENCE_DRAIN * dt, { silent: true });
+  if (S.patience <= 10 && Math.ceil(S.patience) !== before) sfx.tick();
+  if (S.patience <= 0) return runOutOfPatience();
+
   S.idleLeft = Math.max(0, S.idleLeft - dt);
-  const frac = S.idleLeft / cfg.idleSeconds;
-  els.timerBar.style.width = `${frac * 100}%`;
-  els.timerBar.classList.toggle('warn', S.idleLeft <= 8);
-  if (S.idleLeft <= 5 && Math.ceil(S.idleLeft) !== before) sfx.tick();
   if (S.idleLeft <= 0) onIdle();
 }, 100);
 
 function resetIdle() {
   S.idleLeft = cfg.idleSeconds;
-  els.timerBar.style.width = '100%';
-  els.timerBar.classList.remove('warn');
 }
 
-// Each silence raises the price by IDLE_RAISE; staying silent after the last warning ends the deal.
-const IDLE_RAISE = 5;
-
+// Silence: every idleSeconds she grumbles and raises the price (patience keeps draining meanwhile).
 async function onIdle() {
   if (S.busy) return;
   S.idleStrikes += 1;
   resetIdle();
   const raises = L().idleRaise;
-  if (S.idleStrikes <= raises.length) {
-    setMood(S.idleStrikes === 1 ? 'stressed' : 'angry');
-    if (S.idleStrikes > 1) sfx.angry();
-    setPrice(Math.min(S.price + IDLE_RAISE, cfg.maxPrice));
-    await npcSay(raises[S.idleStrikes - 1](S.price));
-    resetIdle();
-  } else {
-    S.over = true; // no escaping by typing while she chases you off
-    setInputEnabled(false);
-    setMood('angry');
-    sfx.angry();
-    const gen = S.gen;
-    await npcSay(L().idleKick());
-    if (gen === S.gen) endGame('kicked');
-  }
+  if (S.idleStrikes > raises.length) return;
+  setMood(S.idleStrikes === 1 ? 'stressed' : 'angry');
+  if (S.idleStrikes > 1) sfx.angry();
+  setPrice(Math.min(S.price + IDLE_RAISE, cfg.maxPrice));
+  await npcSay(raises[S.idleStrikes - 1](S.price));
+  resetIdle();
+}
+
+async function runOutOfPatience(line = L().idleKick()) {
+  if (S.over) return;
+  S.over = true; // no escaping by typing while she sends you away
+  setInputEnabled(false);
+  setPatience(0);
+  setMood('angry');
+  sfx.angry();
+  const gen = S.gen;
+  await npcSay(line);
+  if (gen === S.gen) endGame('kicked');
 }
 
 /* ---------------- Wrong language ---------------- */
@@ -476,21 +496,19 @@ async function onWrongLanguage(text) {
   await new Promise((r) => setTimeout(r, 500 + Math.random() * 500));
   if (gen !== S.gen) return;
   if (n === 1) toast(L().wrongLang, 3000);
+  setPatience(S.patience - [12, 15, 20, 25, 30][Math.min(n, 5) - 1]);
+  if (S.patience <= 0 || n > lines.length) {
+    S.busy = false;
+    return runOutOfPatience(L().wrongLangKick);
+  }
   if (n <= 2) {
     setMood('confused');
   } else if (n === 3) {
     setMood('stressed');
-  } else if (n <= lines.length) {
+  } else {
     setMood('angry');
     sfx.angry();
     setPrice(Math.min(S.price + 5, cfg.maxPrice));
-  } else {
-    S.over = true;
-    setMood('angry');
-    sfx.angry();
-    await npcSay(L().wrongLangKick);
-    if (gen === S.gen) endGame('langKicked');
-    return;
   }
   S.history.push({ role: 'player', text: L().wrongLangHistory });
   const heardNumber = text.match(/\d+/)?.[0];
@@ -536,7 +554,7 @@ async function send() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         message: text,
-        state: { current_price: S.price, turn: S.turn, lang: S.lang, day_seed: S.daySeed },
+        state: { current_price: S.price, turn: S.turn, lang: S.lang, day_seed: S.daySeed, patience: Math.round(S.patience) },
         history: S.history.slice(-40),
       }),
     });
@@ -550,10 +568,11 @@ async function send() {
     if (data.npc_mood === 'angry' && S.mood !== 'angry') sfx.angry();
     setMood(data.npc_mood);
     setPrice(data.current_price);
+    if (typeof data.patience === 'number') setPatience(data.patience);
     await npcSay(data.npc_response);
 
     if (data.deal_closed) return endGame(S.price * S.mission.kg <= S.mission.budget ? 'win' : 'broke');
-    if (data.deal_failed) return endGame('lose');
+    if (data.deal_failed) return endGame(data.patience === 0 ? 'patience' : 'lose');
   } catch (err) {
     if (gen !== S.gen) return;
     S.turn -= 1;
@@ -695,7 +714,7 @@ const RULES = {
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะหงุดหงิดและไม่ลดให้</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
-      <li><b>ห้ามเงียบ:</b> ถ้าไม่ส่งข้อความเกิน ${cfg.idleSeconds} วินาที (พิมพ์ค้างไว้ไม่ส่งก็นับ) ราคาขึ้นครั้งละ 5 บาท (เตือน 3 ครั้ง) ครั้งที่ 4 <b>โดนไล่ ดีลล่ม!</b></li>
+      <li><b>ความอดทนของแม่ค้า:</b> แถบด้านบนจะลดลงเรื่อย ๆ ตอนเงียบหรือพิมพ์ค้างไว้ไม่ส่ง และลดเมื่อต่อต่ำเกินเหตุ ถามซ้ำ พูดไม่ดี หรือพูดผิดภาษา แต่จะ<b>เพิ่มขึ้น</b>เมื่อพูดสุภาพ ให้เหตุผลดี หรือชวนคุยถูกใจ ถ้าเงียบนาน ${cfg.idleSeconds} วินาที แม่ค้าจะบ่นและขึ้นราคา 5 บาท <b>ความอดทนหมด = โดนไล่ ดีลล่ม!</b></li>
       <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
       <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ (แม่ค้ายอมราคาแล้วต้อง<b>พิมพ์ยืนยัน</b> เช่น "ตกลง" หรือ "เอาเลย" ถึงจะซื้อ ยังไม่ยืนยันก็ต่อต่อได้) &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
     </ol>
@@ -711,7 +730,7 @@ const RULES = {
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
       <li><b>Lowball offers</b> and rudeness annoy her, and she won't drop the price. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
-      <li><b>Idle timer:</b> every ${cfg.idleSeconds}s without sending a message (typing doesn't count) raises the price by 5฿. After 3 warnings, you get kicked out.</li>
+      <li><b>Patience bar:</b> it drains while you're silent or typing without sending, and drops when you lowball, repeat yourself, act rude or use the wrong language. Being polite, giving good reasons and friendly chat <b>raise</b> it. Every ${cfg.idleSeconds}s of silence she grumbles and adds 5฿. <b>At zero she kicks you out!</b></li>
       <li><b>No message limit.</b></li>
       <li><b>WIN:</b> close a deal within your budget. When she agrees to a price, <b>confirm</b> it ("deal", "I'll take it") to buy, or keep haggling. <b>LOSE:</b> the deal fails, you get kicked out, or you can't afford the price.</li>
     </ol>
@@ -735,6 +754,7 @@ async function startGame(lang, { newMission = false } = {}) {
   // daySeed picks a different "day at the market" for the AI each game
   Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, wrongLang: 0, gen: S.gen + 1, daySeed: Math.floor(Math.random() * 1000) });
   setPrice(cfg.startPrice, { silent: true });
+  setPatience(100, { silent: true });
   applyLang();
   setMood('neutral');
   renderPlayerBubble('', false);
@@ -773,8 +793,8 @@ function endGame(result) {
         </div>`);
     } else {
       sfx.lose();
-      const title = { broke: L().broke, kicked: L().kicked, langKicked: L().lose }[result] ?? L().lose;
-      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: L().kickedMsg, langKicked: L().langKickedMsg }[result] ?? L().loseMsg;
+      const title = { broke: L().broke, kicked: L().kicked }[result] ?? L().lose;
+      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: L().kickedMsg, patience: L().patienceMsg }[result] ?? L().loseMsg;
       showOverlay(`
         <h1>${title}</h1>
         <p>${msg}</p>

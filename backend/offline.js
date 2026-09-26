@@ -44,6 +44,8 @@ const LINES = {
     floor: ['{price} บาทนี่ต่ำสุดแล้วจริง ๆ ลดกว่านี้ป้าไม่มีกินแล้ว'],
     final: ['คุยวนไปวนมาป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ ไปเถอะไป'],
     severe: ['ปากหมาแบบนี้ป้าไม่ขายให้หรอก! ไปให้พ้นเลย ไป๊!', 'ด่าคนแก่แบบนี้ได้ยังไง! ไม่ขายแล้ว ไปซื้อที่อื่นไป!'],
+    // her patience ran out
+    patienceOut: ['พอแล้ว ป้าหมดความอดทนแล้ว! ไม่ขายแล้ว ไปซื้อที่อื่นเถอะ', 'เฮ้อ ไม่ไหวแล้วจริง ๆ ป้าไม่ขายแล้วนะ ไปเถอะไป'],
     // asking the same thing again (index = repeat count - 1)
     repeat: [
       ['ก็ถามไปแล้วไงลูก ป้าก็ตอบไปแล้ว {price} จ้ะ', 'ถามซ้ำก็ได้คำตอบเดิมแหละ {price} บาท'],
@@ -80,6 +82,7 @@ const LINES = {
     floor: ["{price} is really as low as I go. Any lower and I don't eat tonight."],
     final: ["We keep going in circles. I'm tired. No sale today."],
     severe: ["With that mouth? No way I'm selling to you. Get outta here!", "Don't you talk to me like that! No sale. Go!"],
+    patienceOut: ["That's it, I'm out of patience. No sale. Go buy somewhere else.", "I'm done. Seriously, I'm done. No sale today."],
     repeat: [
       ["You just asked me that. Same answer: {price}.", 'Asking again gets you the same answer. {price}.'],
       ["Again? Come on, say something new.", "I've heard that already. Got anything else?"],
@@ -107,6 +110,8 @@ function parseQty(text) {
   const qty = NUM_WORDS[raw] ?? parseFloat(raw);
   return { qty };
 }
+
+export const patienceOutLine = (lang, history = []) => freshLine(LINES[lang].patienceOut, {}, history);
 
 export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 }) {
   const lang = state.lang;
@@ -169,6 +174,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
       current_price: state.price,
       deal_closed: false,
       deal_failed: level >= 4,
+      patience_change: -(8 + 6 * level),
     };
   }
   if (RE.severe.test(message)) {
@@ -185,5 +191,8 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     current_price: price,
     deal_closed: closed,
     deal_failed: failed,
+    // rough guess of how the message felt to her
+    patience_change: failed ? -100 : key === 'rude' ? -25 : key === 'lowball' ? -15 : key === 'grumble' ? -3
+      : Math.min(12, polite * 4 + charm * 5 + reason * 3),
   };
 }

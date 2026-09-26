@@ -135,3 +135,37 @@ test('prompt-injection style messages cannot set the price', async () => {
   assert.ok(r.current_price >= 80);
   assert.equal(r.deal_closed, false);
 });
+
+test('patience: polite talk raises it, annoying talk lowers it', async () => {
+  const nice = (await ask('สวัสดีครับป้า ป้าใจดีจังเลยครับ ผมเป็นนักศึกษา ขอลดหน่อยได้ไหมครับ', { patience: 60 })).json;
+  assert.ok(nice.patience > 60, `polite: ${nice.patience}`);
+  const low = (await ask('ขอ 10 บาท', { patience: 60 })).json;
+  assert.ok(low.patience <= 48, `lowball: ${low.patience}`);
+  assert.ok(nice.patience <= 100 && low.patience >= 0);
+});
+
+test('patience: insults empty it and end the deal', async () => {
+  const r = (await ask('อีแก่ ขายแพงเหี้ยๆ', { patience: 100 })).json;
+  assert.equal(r.patience, 0);
+  assert.equal(r.deal_failed, true);
+});
+
+test('patience: running out ends the deal with a matching line', async () => {
+  const r = (await ask('แพงชะมัดเลย', { patience: 5 })).json;
+  assert.equal(r.patience, 0);
+  assert.equal(r.deal_failed, true);
+  assert.equal(r.npc_mood, 'angry');
+  assert.match(r.npc_response, /ไม่ขาย/);
+});
+
+test('patience: repeats drain it harder each time', async () => {
+  const h = [{ role: 'player', text: 'ลดหน่อยได้ไหม' }];
+  const r = (await ask('ลดหน่อยได้ไหม', { patience: 80, day_seed: 2 }, h)).json;
+  assert.ok(r.patience <= 66, String(r.patience));
+});
+
+test('patience: a closed deal never loses patience', async () => {
+  const r = (await ask('ตกลงครับ', { current_price: 100, patience: 30 })).json;
+  assert.equal(r.deal_closed, true);
+  assert.ok(r.patience >= 30);
+});

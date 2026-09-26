@@ -255,7 +255,23 @@ button { cursor: pointer; }
   background: var(--gold);
   transition: width .1s linear, background .3s;
 }
-#timerBar.warn { background: var(--bad); animation: blink .5s steps(2) infinite; }
+#timerBar[data-level='mid'] { background: var(--warn); }
+#timerBar[data-level='low'] { background: var(--bad); animation: blink .5s steps(2) infinite; }
+.timer { position: relative; }
+.patience-pop {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  margin-left: .5em;
+  transform: translateY(-50%);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  text-shadow: 0 1px 0 #000;
+}
+.patience-pop.show { animation: pop 1.3s ease-out; }
+.patience-pop.up { color: var(--good); }
+.patience-pop.down { color: var(--bad); }
 .timer.paused { opacity: .45; }
 @keyframes blink { 50% { opacity: .45; } }
 

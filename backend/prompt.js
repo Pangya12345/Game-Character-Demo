@@ -76,7 +76,8 @@ Return ONLY a JSON object:
  "npc_mood": "neutral" | "happy" | "angry" | "stressed",
  "current_price": integer (per kilo: your asking price after this turn, the offer you just agreed to, or the final price if deal_closed),
  "deal_closed": boolean,
- "deal_failed": boolean}`;
+ "deal_failed": boolean,
+ "patience_change": integer (how this message changed your patience, like a real person: swearing/insults -100; rude or sarcastic -20 to -35; silly lowball -12 to -20; pushy, repetitive or empty "cheaper please" -5 to -12; plain normal haggling -3 to 0; polite with a real reason +2 to +6; genuine small talk, charm, humour, respect +5 to +12)}`;
 }
 
 // A different "day at the market" per game, so two games never feel the same.
@@ -120,6 +121,7 @@ export function buildUserPrompt({ message, state, history, repeatLvl = 0 }) {
 - language: ${state.lang === 'en' ? 'en (English)' : 'th (Thai)'}
 - current_asking_price: ${state.price}
 - player messages so far: ${state.turn}${repeatNote(repeatLvl)}
+- your patience: ${state.patience}/100 (${state.patience >= 70 ? 'fine' : state.patience >= 40 ? 'wearing thin: be a bit shorter and firmer' : state.patience >= 20 ? 'running low: clearly irritated, short answers, hint you might stop selling' : 'almost gone: one more annoyance and you stop selling'})
 - TODAY: ${today} (let this colour your mood and remarks naturally, don't announce it every time)
 
 CONVERSATION SO FAR (oldest first)
