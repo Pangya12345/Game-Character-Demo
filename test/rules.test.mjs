@@ -169,3 +169,12 @@ test('patience: a closed deal never loses patience', async () => {
   assert.equal(r.deal_closed, true);
   assert.ok(r.patience >= 30);
 });
+
+test('Thai numerals mixed with English words still count as Thai', async () => {
+  const r = await ask('ok ๑๐๐ ได้ไหม', { lang: 'th' });
+  assert.equal(r.status, 200, JSON.stringify(r.json));
+  const d = await ask('ok ๑๐๐', { lang: 'th' });
+  assert.equal(d.status, 200, 'Thai digits are Thai script');
+  const e = await ask('ok ๑๐๐', { lang: 'en' });
+  assert.equal(e.json.error, 'wrong_language');
+});

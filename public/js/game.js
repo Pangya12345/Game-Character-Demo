@@ -93,6 +93,7 @@ const T = {
     micDenied: 'ต้องอนุญาตให้ใช้ไมโครโฟนก่อนนะ',
     micNoSpeech: 'ไม่ได้ยินเสียงเลย ลองพูดอีกครั้งนะ',
     micError: 'ไมโครโฟนมีปัญหา ลองอีกครั้งนะ',
+    micMissing: 'ไม่พบไมโครโฟน เสียบไมค์หรือเปิดสิทธิ์ก่อนนะ',
     // What she says when the player keeps typing in another language (index = strike - 1)
     // She can't understand the player. (p = price, n = a number she did catch, if any)
     wrongLangLines: [
@@ -195,6 +196,7 @@ const T = {
     micDenied: 'Please allow microphone access.',
     micNoSpeech: "Didn't catch that. Try again.",
     micError: 'Microphone error. Please try again.',
+    micMissing: 'No microphone found. Plug one in or check permissions.',
     wrongLangLines: [
       (p, n) => (n ? `${n}? I got the number, but that's it. Can you say it in English?` : pick([
         "Sorry, what? What language is that? I didn't get a word.",
@@ -556,6 +558,8 @@ async function send() {
 
   try {
     const res = await fetch('api/negotiate', {
+      // never leave the player stuck on a hung request (older Safari has no AbortSignal.timeout)
+      ...(AbortSignal.timeout ? { signal: AbortSignal.timeout(20000) } : {}),
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -567,6 +571,8 @@ async function send() {
     const data = await res.json().catch(() => ({}));
     if (gen !== S.gen) return;
     if (!res.ok) throw Object.assign(new Error(data.error || `HTTP ${res.status}`), { code: data.error });
+    const valid = typeof data.npc_response === 'string' && Number.isFinite(data.current_price) && data.npc_mood in L().moods;
+    if (!valid) throw new Error('Unexpected reply from server');
 
     els.input.value = '';
     S.history.push({ role: 'player', text });
@@ -669,6 +675,7 @@ function toggleListening() {
     if (e.error === 'aborted') return;
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast(L().micDenied, 4000);
     else if (e.error === 'no-speech') toast(L().micNoSpeech, 2500);
+    else if (e.error === 'audio-capture') toast(L().micMissing, 4000);
     else toast(L().micError, 2500);
   };
   rec.onend = () => {

@@ -122,13 +122,14 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   // ---- Patience (0-100): one meter for everything that wears her down or wins her over ----
   let change = Math.round(Number(raw?.patience_change));
   if (!Number.isFinite(change)) change = 0;
-  change = Math.max(-40, Math.min(12, change));
+  // one message can cost at most 40, unless she refuses to sell over it (insults can empty it)
+  change = Math.max(deal_failed ? -100 : -40, Math.min(12, change));
   if (offer != null && offer < cfg.floorPrice * 0.65) change = Math.min(change, -12); // silly lowball
   if (repeatLvl > 0) change = Math.min(change, -(8 + 6 * repeatLvl)); // asking the same thing again
   if (npc_mood === 'angry') change = Math.min(change, -10);
   let patience = Math.max(0, Math.min(100, state.patience + change));
   if (deal_closed) patience = Math.max(patience, state.patience);
-  if (deal_failed) patience = 0;
+  if (repeatLvl >= 4) patience = 0; // asked the same thing after her final warning
   let ranOut = false;
   if (patience === 0 && !deal_closed && !deal_failed) {
     deal_failed = true;
@@ -166,10 +167,9 @@ export async function negotiate(body, ip = 'unknown') {
   if (rateLimited(ip)) return { status: 429, json: { error: 'rate_limited' } };
 
   const cfg = getConfig();
+  const typed = typeof body?.message === 'string' ? body.message.trim().slice(0, MAX_MESSAGE) : '';
   // Thai digits (๑๐๐) -> 100 so offers written in Thai numerals are understood too.
-  const message = typeof body?.message === 'string'
-    ? body.message.replace(/[๐-๙]/g, (d) => String(d.charCodeAt(0) - 0x0e50)).trim().slice(0, MAX_MESSAGE)
-    : '';
+  const message = typed.replace(/[๐-๙]/g, (d) => String(d.charCodeAt(0) - 0x0e50));
   if (!message) return { status: 400, json: { error: 'empty_message' } };
 
   const s = body.state || {};
@@ -180,7 +180,7 @@ export async function negotiate(body, ip = 'unknown') {
     daySeed: clampInt(s.day_seed, 0, 9999, 0),
     patience: clampInt(s.patience, 0, 100, 100),
   };
-  if (!matchesLanguage(message, state.lang)) return { status: 400, json: { error: 'wrong_language', expected: state.lang } };
+  if (!matchesLanguage(typed, state.lang)) return { status: 400, json: { error: 'wrong_language', expected: state.lang } };
   const history = sanitizeHistory(body.history);
   const repeatLvl = repeatLevel(countRepeats(message, history), repeatLimit(state.daySeed));
   const ctx = { cfg, message, state, history, repeatLvl };
