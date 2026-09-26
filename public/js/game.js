@@ -53,29 +53,45 @@ const T = {
       `มาแล้วเหรอ ยืนดูตั้งนาน จะเอากี่โลล่ะ? กิโลละ ${p} บาท`,
       `ร้อนก็ร้อน... เอามะม่วงไปกินให้ชื่นใจไหมหลาน กิโลละ ${p} ไม่แพงหรอก`,
     ]),
-    idleRaise: [
-      (p) => pick([
-        `ว่าไงพ่อหนุ่ม ยืนเงียบทำไม? ป้าเสียเวลาขาย ขึ้นเป็น ${p} บาทนะ`,
-        `ยืนเหม่ออะไรล่ะ ป้าไม่ได้ว่างทั้งวันนะ คิดนานก็ ${p} บาทไปเลย`,
-        `เงียบแบบนี้ป้าถือว่าไม่รีบนะ งั้นราคาขึ้นเป็น ${p} บาท`,
-      ]),
-      (p) => pick([
-        `เงียบอีกแล้ว! ยืนบังร้านป้าอยู่ได้ ${p} บาทเลยเอ้า!`,
-        `นี่มาซื้อหรือมาหลบแดดจ๊ะ? ${p} บาทแล้วนะ`,
-        `ป้าไม่มีเวลาทั้งวันนะหนู ${p} บาท จะเอาก็ว่ามา`,
-      ]),
-      (p) => pick([
-        `${p} บาท! เตือนครั้งสุดท้ายนะ ยังเงียบอีกป้าไล่จริงด้วย!`,
-        `ครั้งสุดท้ายแล้วนะ ${p} บาท ไม่พูดอะไรป้าไม่ขายแล้ว!`,
-      ]),
+    // What she does while you keep her waiting, picked at random like a real person (p = price)
+    idle: {
+      nudge: [
+        () => 'ว่าไงจ๊ะ จะเอากี่โลดี?',
+        () => 'คิดนานจังนะ ลองจับดูก็ได้ นิ่ม ๆ หอม ๆ ทุกลูก',
+        () => 'เลือกไม่ถูกเหรอลูก ป้าช่วยเลือกให้ไหม?',
+      ],
+      busy: [
+        () => 'เฮ้อ งั้นป้าจัดลังไปก่อนนะ คิดได้แล้วเรียก',
+        () => 'ป้าขอนั่งพักขาหน่อยนะ ปวดเข่าจริง ๆ',
+        () => 'แมลงวันตอมอีกแล้ว... ไป๊ ๆ! เออ ว่าไงพ่อหนุ่ม',
+        () => 'ร้อนจังเลย ป้าพัดวีไปก่อนนะ ตัดสินใจได้แล้วบอก',
+      ],
+      freebie: [
+        () => 'ถ้าซื้อตอนนี้ ป้าแถมลูกเล็กให้อีกลูกเลย เอาไหม?',
+        () => 'เอาเลยดีกว่าลูก ป้าเลือกลูกสวย ๆ ให้เอง',
+      ],
+      sweeten: [
+        (p) => `เอางี้ ตัดสินใจตอนนี้ ป้าลดให้เหลือ ${p} ละกัน`,
+        (p) => `วันนี้ขายไม่ค่อยดี เอาไป ${p} ก็ได้ แต่ต้องซื้อเลยนะ`,
+      ],
+      raise: [
+        (p) => `ยืนเหม่ออะไรล่ะ ป้าไม่ได้ว่างทั้งวันนะ คิดนานก็ ${p} บาทไปเลย`,
+        (p) => `เงียบแบบนี้ป้าถือว่าไม่รีบนะ งั้นราคาขึ้นเป็น ${p} บาท`,
+        (p) => `นี่มาซื้อหรือมาหลบแดดจ๊ะ? ${p} บาทแล้วนะ`,
+      ],
+      packup: [
+        () => 'ป้าเริ่มเก็บของแล้วนะ ถ้าจะซื้อก็รีบหน่อย',
+        () => 'เดี๋ยวป้าจะปิดร้านแล้วนะ จะเอาไม่เอาว่ามา',
+      ],
+    },
+    // How it ends when her patience runs out, also random (line = what she says, msg = result screen)
+    endings: [
+      { line: 'ไป๊! ไม่ซื้อก็ไปให้พ้น ป้าไม่ขายให้แล้ว!', msg: 'แม่ค้าหมดความอดทน เลยไล่ไปแล้ว' },
+      { line: 'พอแล้ว ป้าเก็บร้านกลับบ้านดีกว่า วันนี้ไม่ขายแล้ว', msg: 'แม่ค้าเก็บร้านกลับบ้านไปแล้ว' },
+      { line: 'ฮัลโหล ไอ้ตี๋เหรอลูก... เออ ๆ ป้าว่างแล้ว ลูกค้าคนนี้คงไม่ซื้อหรอก', msg: 'แม่ค้าหันไปคุยโทรศัพท์กับหลาน ไม่สนใจคุณแล้ว' },
+      { line: 'เฮ้อ วันนี้ป้าเหนื่อยแล้ว พรุ่งนี้ค่อยมาใหม่นะ', msg: 'แม่ค้าบอกให้มาใหม่พรุ่งนี้' },
     ],
-    idleKick: () => pick([
-      'ไป๊! ไม่ซื้อก็ไปให้พ้น ป้าจะขายคนอื่นแล้ว ไม่ขายให้แล้ว!',
-      'พอแล้ว ๆ ยืนเป็นหุ่นอยู่ได้ ไปเลยไป ป้าจะเก็บร้านแล้ว!',
-      'เสียเวลาป้าจริง ๆ! หลีกไปเลย ให้คนอื่นเขาซื้อบ้าง!',
-    ]),
-    kicked: 'โดนไล่!',
-    kickedMsg: 'แม่ค้าหมดความอดทน เลยไล่ไปแล้ว ดีลล่ม!',
+    kicked: 'ดีลล่ม!',
     patienceMsg: 'แม่ค้าหมดความอดทนแล้ว ลองพูดให้ถูกใจแม่ค้ามากกว่านี้นะ',
     wallet: (b, kg, total) => `งบ ${b}฿ · ${kg} กก. = ${total}฿`,
     mission: (b, kg) => `ภารกิจ: คุณมีเงิน <b>${b} บาท</b> ต้องซื้อมะม่วง <b>${kg} กิโล</b> (ต้องได้ไม่เกิน ${Math.floor(b / kg)}฿/กก.)`,
@@ -115,6 +131,7 @@ const T = {
       (p) => `${p} บาท! ถ้ายังพูดภาษาที่ป้าไม่รู้เรื่องอีก ป้าไม่ขายแล้วนะ`,
     ],
     wrongLangKick: 'ไม่ไหวแล้ว ๆ คุยกันไม่รู้เรื่อง ไปหาคนแปลมาก่อนแล้วค่อยมาซื้อนะ!',
+    langKickedMsg: 'คุยกันไม่รู้เรื่อง แม่ค้าเลยไม่ขายให้แล้ว',
     wrongLangHistory: '(พูดภาษาที่แม่ค้าฟังไม่ออก)',
     win: 'ดีลสำเร็จ!',
     lose: 'ดีลล่ม!',
@@ -156,29 +173,43 @@ const T = {
       `You've been staring for a while. How many kilos? ${p} each.`,
       `Hot out today, huh? Grab some mangoes. Just ${p} a kilo.`,
     ]),
-    idleRaise: [
-      (p) => pick([
-        `Hello? You just gonna stand there? Now it's ${p}.`,
-        `Take your time, but it'll cost you. ${p} baht now.`,
-        `I've got stuff to do, you know. ${p} now.`,
-      ]),
-      (p) => pick([
-        `Still nothing? You're blocking my stand. ${p}!`,
-        `Are you buying or just hiding from the sun? ${p} now.`,
-        `I don't have all day. ${p}. Say something.`,
-      ]),
-      (p) => pick([
-        `${p}! Last warning. Say something or I'm done with you.`,
-        `Last chance: ${p}. One more time and no deal!`,
-      ]),
+    idle: {
+      nudge: [
+        () => 'So, how many kilos are we talking?',
+        () => "Go ahead, feel 'em. Nice and ripe, every one.",
+        () => "Can't decide? Want me to pick some for you?",
+      ],
+      busy: [
+        () => "Alright, I'll sort these crates while you think.",
+        () => 'Mind if I sit down? My knees are killing me.',
+        () => 'Ugh, these flies... Shoo! Sorry, where were we?',
+        () => "Whew, it's hot. I'll just fan myself while you decide.",
+      ],
+      freebie: [
+        () => "Buy now and I'll throw in a small one for free.",
+        () => "Just go for it. I'll pick out the nicest ones myself.",
+      ],
+      sweeten: [
+        (p) => `Tell you what, decide now and it's ${p}.`,
+        (p) => `Slow day... ${p} if you buy right now.`,
+      ],
+      raise: [
+        (p) => `Take your time, but it'll cost you. ${p} baht now.`,
+        (p) => `I've got stuff to do, you know. ${p} now.`,
+        (p) => `Are you buying or just hiding from the sun? ${p} now.`,
+      ],
+      packup: [
+        () => "I'm starting to pack up. If you want 'em, hurry.",
+        () => "I'm closing soon. Yes or no?",
+      ],
+    },
+    endings: [
+      { line: "Okay, that's it. If you're not buying, move along. No sale!", msg: 'Som Sri ran out of patience and sent you away.' },
+      { line: "That's enough for today. I'm packing up and going home.", msg: 'Som Sri packed up her stall and went home.' },
+      { line: "Hello? Oh, hi sweetie! Yeah, I'm free now, this customer isn't buying anyway.", msg: 'Som Sri took a phone call and forgot about you.' },
+      { line: "I'm tired today. Come back tomorrow, okay?", msg: 'Som Sri told you to come back tomorrow.' },
     ],
-    idleKick: () => pick([
-      "Okay, that's it. If you're not buying, move along. No sale!",
-      "Forget it. You're just standing there. I'm done, go on!",
-      "You're wasting my time. Step aside and let someone else buy!",
-    ]),
     kicked: 'GAME OVER',
-    kickedMsg: 'Som Sri ran out of patience and sent you away.',
     patienceMsg: 'Som Sri ran out of patience. Try being easier to deal with!',
     wallet: (b, kg, total) => `Budget ${b}฿ · ${kg} kg = ${total}฿`,
     mission: (b, kg) => `OBJECTIVE: Buy <b>${kg} kg</b> of mangoes with <b>${b}฿</b> (${Math.floor(b / kg)}฿/kg or less).`,
@@ -216,6 +247,7 @@ const T = {
       (p) => `${p}. Last try. If I still can't understand you, I'm done.`,
     ],
     wrongLangKick: 'Sorry, I give up. Bring a friend who speaks English and come back later!',
+    langKickedMsg: "She couldn't understand you, so she gave up on the sale.",
     wrongLangHistory: '(said something Som Sri could not understand)',
     win: 'YOU WIN!',
     lose: 'GAME OVER',
@@ -270,10 +302,12 @@ const S = {
   turn: 0,
   history: [],
   idleLeft: 25,
-  idleStrikes: 0,
   wrongLang: 0,
   patience: 100,
   lastKeyAt: 0,
+  lastIdle: null,
+  sweetened: false,
+  endMsg: null,
   mission: MISSIONS[0],
   gen: 0, // bumps on every (re)start so stale async replies are ignored
 };
@@ -458,23 +492,49 @@ function resetIdle() {
   S.idleLeft = cfg.idleSeconds;
 }
 
-// Silence: every idleSeconds she grumbles and raises the price (patience keeps draining meanwhile).
+// Silence: every idleSeconds she does something, like a real vendor would. What she does is
+// random but depends on how much patience she has left, and she doesn't do the same thing twice in a row.
+function pickIdleReaction() {
+  const p = S.patience;
+  const canSweeten = !S.sweetened && S.price >= 100; // a "decide now" discount, once per game
+  const weights = p > 60
+    ? { nudge: 3, busy: 3, freebie: 1.5, sweeten: canSweeten ? 1 : 0, raise: 1, packup: 0 }
+    : p > 30
+      ? { nudge: 1, busy: 2, freebie: 1, sweeten: canSweeten ? 0.5 : 0, raise: 3, packup: 1 }
+      : { nudge: 0, busy: 1, freebie: 0, sweeten: 0, raise: 2, packup: 3 };
+  if (S.lastIdle) weights[S.lastIdle] = 0;
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (const [kind, w] of Object.entries(weights)) {
+    if ((r -= w) < 0) return kind;
+  }
+  return 'raise';
+}
+
 async function onIdle() {
   if (S.busy) return;
-  S.idleStrikes += 1;
   resetIdle();
-  const raises = L().idleRaise;
-  if (S.idleStrikes > raises.length) return;
-  setMood(S.idleStrikes === 1 ? 'stressed' : 'angry');
-  if (S.idleStrikes > 1) sfx.angry();
-  setPrice(Math.min(S.price + IDLE_RAISE, cfg.maxPrice));
-  await npcSay(raises[S.idleStrikes - 1](S.price));
+  if (S.patience < 8) return; // she's about to give up anyway; don't bump the price a second before
+  const kind = pickIdleReaction();
+  S.lastIdle = kind;
+  const moods = { nudge: 'neutral', busy: 'neutral', freebie: 'happy', sweeten: 'happy', raise: 'stressed', packup: 'stressed' };
+  if (kind === 'raise') setPrice(Math.min(S.price + IDLE_RAISE, cfg.maxPrice));
+  if (kind === 'sweeten') {
+    S.sweetened = true;
+    setPrice(S.price - (2 + Math.floor(Math.random() * 2))); // -2 or -3 baht
+  }
+  setMood(S.patience <= 25 && kind === 'raise' ? 'angry' : moods[kind]);
+  if (kind === 'raise' || kind === 'packup') sfx.angry();
+  const lines = L().idle[kind];
+  await npcSay(pick(lines)(S.price));
   resetIdle();
 }
 
-async function runOutOfPatience(line = L().idleKick()) {
+async function runOutOfPatience(line, msg) {
   if (S.over) return;
+  if (!line) ({ line, msg } = pick(L().endings)); // how she gives up is random too
   S.over = true; // no escaping by typing while she sends you away
+  S.endMsg = msg;
   setInputEnabled(false);
   setPatience(0);
   setMood('angry');
@@ -496,7 +556,6 @@ async function onWrongLanguage(text) {
   renderPlayerBubble(text, false);
   scene.hop();
   S.wrongLang += 1;
-  S.idleStrikes = 0;
   resetIdle();
   const lines = L().wrongLangLines;
   const n = S.wrongLang;
@@ -507,7 +566,7 @@ async function onWrongLanguage(text) {
   setPatience(S.patience - [12, 15, 20, 25, 30][Math.min(n, 5) - 1]);
   if (S.patience <= 0 || n > lines.length) {
     S.busy = false;
-    return runOutOfPatience(L().wrongLangKick);
+    return runOutOfPatience(L().wrongLangKick, L().langKickedMsg);
   }
   if (n <= 2) {
     setMood('confused');
@@ -547,7 +606,6 @@ async function send() {
   const gen = S.gen;
   S.busy = true;
   S.turn += 1;
-  S.idleStrikes = 0;
   resetIdle();
   renderTurn();
   setInputEnabled(false);
@@ -748,7 +806,7 @@ const RULES = {
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะหงุดหงิดและไม่ลดให้</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
-      <li><b>ความอดทนของแม่ค้า:</b> แถบด้านบนจะลดลงเรื่อย ๆ ตอนเงียบ (ระหว่างกำลังพิมพ์จะลดช้าลง แต่ไม่หยุด) และลดเมื่อต่อต่ำเกินเหตุ ถามซ้ำ พูดไม่ดี หรือพูดผิดภาษา แต่จะ<b>เพิ่มขึ้น</b>เมื่อพูดสุภาพ ให้เหตุผลดี หรือชวนคุยถูกใจ ถ้าเงียบนาน ${cfg.idleSeconds} วินาที แม่ค้าจะบ่นและขึ้นราคา 5 บาท <b>ความอดทนหมด = โดนไล่ ดีลล่ม!</b></li>
+      <li><b>ความอดทนของแม่ค้า:</b> แถบด้านบนจะลดลงเรื่อย ๆ ตอนเงียบ (ระหว่างกำลังพิมพ์จะลดช้าลง แต่ไม่หยุด) และลดเมื่อต่อต่ำเกินเหตุ ถามซ้ำ พูดไม่ดี หรือพูดผิดภาษา แต่จะ<b>เพิ่มขึ้น</b>เมื่อพูดสุภาพ ให้เหตุผลดี หรือชวนคุยถูกใจ ถ้าเงียบนาน ${cfg.idleSeconds} วินาที แม่ค้าจะทำอะไรสักอย่างเหมือนคนจริง เช่น ชวนคุย ทำอย่างอื่นรอ เสนอของแถม บางทีลดให้ถ้าตัดสินใจเลย หรือบ่นแล้วขึ้นราคา <b>ความอดทนหมด = ดีลล่ม!</b></li>
       <li><b>ไม่จำกัดจำนวนข้อความ</b> คุยต่อรองได้เรื่อย ๆ จนกว่าจะตกลงกันได้ แต่ห้ามเงียบนาน!</li>
       <li><b>ชนะ:</b> ตกลงราคาได้และยอดรวมไม่เกินงบ (แม่ค้ายอมราคาแล้วต้อง<b>พิมพ์ยืนยัน</b> เช่น "ตกลง" หรือ "เอาเลย" ถึงจะซื้อ ยังไม่ยืนยันก็ต่อต่อได้) &nbsp;<b>แพ้:</b> ดีลล่ม, โดนไล่ หรือตกลงแล้วเงินไม่พอจ่าย</li>
     </ol>
@@ -764,7 +822,7 @@ const RULES = {
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
       <li><b>Lowball offers</b> and rudeness annoy her, and she won't drop the price. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
-      <li><b>Patience bar:</b> it drains while you're silent (slower while you're typing, but it never stops), and drops when you lowball, repeat yourself, act rude or use the wrong language. Being polite, giving good reasons and friendly chat <b>raise</b> it. Every ${cfg.idleSeconds}s of silence she grumbles and adds 5฿. <b>At zero she kicks you out!</b></li>
+      <li><b>Patience bar:</b> it drains while you're silent (slower while you're typing, but it never stops), and drops when you lowball, repeat yourself, act rude or use the wrong language. Being polite, giving good reasons and friendly chat <b>raise</b> it. Every ${cfg.idleSeconds}s of silence she does something, like a real person: chats, keeps herself busy, offers a freebie, sometimes a small "buy now" discount, or grumbles and raises the price. <b>At zero the deal is off!</b></li>
       <li><b>No message limit.</b></li>
       <li><b>WIN:</b> close a deal within your budget. When she agrees to a price, <b>confirm</b> it ("deal", "I'll take it") to buy, or keep haggling. <b>LOSE:</b> the deal fails, you get kicked out, or you can't afford the price.</li>
     </ol>
@@ -786,7 +844,7 @@ async function startGame(lang, { newMission = false } = {}) {
   if (newMission) S.mission = pickMission();
   finishTyping();
   // daySeed picks a different "day at the market" for the AI each game
-  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], idleStrikes: 0, wrongLang: 0, gen: S.gen + 1, daySeed: Math.floor(Math.random() * 1000) });
+  Object.assign(S, { screen: 'game', started: true, over: false, busy: false, lang, turn: 0, history: [], wrongLang: 0, lastIdle: null, sweetened: false, endMsg: null, gen: S.gen + 1, daySeed: Math.floor(Math.random() * 1000) });
   setPrice(cfg.startPrice, { silent: true });
   setPatience(100, { silent: true });
   applyLang();
@@ -828,7 +886,7 @@ function endGame(result) {
     } else {
       sfx.lose();
       const title = { broke: L().broke, kicked: L().kicked }[result] ?? L().lose;
-      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: L().kickedMsg, patience: L().patienceMsg }[result] ?? L().loseMsg;
+      const msg = { broke: L().brokeMsg(total, S.mission.budget), kicked: S.endMsg || L().patienceMsg, patience: L().patienceMsg }[result] ?? L().loseMsg;
       showOverlay(`
         <h1>${title}</h1>
         <p>${msg}</p>
