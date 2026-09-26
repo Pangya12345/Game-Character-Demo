@@ -606,6 +606,7 @@ async function send() {
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognizer = null;
 let listening = false;
+const SILENCE_MS = 900; // pause this long after speaking and the mic closes (nothing is sent until you press Enter/SEND)
 
 function setListening(on) {
   listening = on;
@@ -633,7 +634,17 @@ function toggleListening() {
   const typedBefore = els.input.value.trim();
   const gen = S.gen;
   let heard = '';
-  let aborted = false;
+  let done = false;
+  let silenceTimer = null;
+
+  // Nothing is sent automatically: your words wait in the chat box so you can fix them,
+  // then you press Enter or SEND. We just close the mic as soon as you stop talking.
+  const finish = () => {
+    clearTimeout(silenceTimer);
+    if (done) return;
+    done = true;
+    rec.stop();
+  };
 
   rec.onresult = (e) => {
     let finalText = '';
@@ -646,18 +657,25 @@ function toggleListening() {
     const text = [typedBefore, heard].filter(Boolean).join(' ').slice(0, 280);
     els.input.value = text;
     renderPlayerBubble(text, true);
+    if (finalText) return finish();
+    // No new words for a moment = you've stopped talking (quicker than the browser's own wait).
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(finish, SILENCE_MS);
   };
   rec.onerror = (e) => {
-    if (e.error === 'aborted') aborted = true;
-    else if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast(L().micDenied, 4000);
+    if (e.error === 'aborted') return;
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast(L().micDenied, 4000);
     else if (e.error === 'no-speech') toast(L().micNoSpeech, 2500);
     else toast(L().micError, 2500);
   };
   rec.onend = () => {
+    clearTimeout(silenceTimer);
     if (recognizer === rec) recognizer = null;
     setListening(false);
-    resetIdle(); // she was listening; the patience clock restarts from when you stopped talking
-    if (!aborted && heard && gen === S.gen && S.started && !S.over && !S.busy) send();
+    if (gen !== S.gen || S.over || S.busy) return;
+    // Your words are in the box: count it like typing so she waits a bit, then press Enter/SEND.
+    S.lastKeyAt = performance.now();
+    if (heard) els.input.focus();
   };
 
   try {
@@ -716,7 +734,7 @@ const RULES = {
     <h2>กติกาการเล่น</h2>
     <p class="mission">ภารกิจ: คุณมีเงิน <b>${m.budget} บาท</b> ต้องซื้อมะม่วง <b>${m.kg} กิโล</b><br>ราคาเริ่มต้นกิโลละ ${cfg.startPrice} บาท ต้องต่อให้เหลือไม่เกิน <b>${Math.floor(m.budget / m.kg)} บาท/กก.</b></p>
     <ol>
-      <li><b>พิมพ์หรือกดปุ่มไมค์ 🎤 เพื่อพูด</b> คุยได้อิสระ แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ (<b>พิมพ์ภาษาไทยเท่านั้น</b> ถ้าพิมพ์ภาษาอื่นแม่ค้าจะงง ถ้าบ่อย ๆ จะโกรธ)</li>
+      <li><b>พิมพ์ หรือกดปุ่มไมค์ 🎤 แล้วพูด</b> (คำที่พูดจะขึ้นในช่องแชท กด Enter หรือ SEND เพื่อส่ง) คุยได้อิสระ แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ (<b>พิมพ์ภาษาไทยเท่านั้น</b> ถ้าพิมพ์ภาษาอื่นแม่ค้าจะงง ถ้าบ่อย ๆ จะโกรธ)</li>
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะหงุดหงิดและไม่ลดให้</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
@@ -732,7 +750,7 @@ const RULES = {
     <h2>HOW TO PLAY</h2>
     <p class="mission"><b>OBJECTIVE:</b> Buy <b>${m.kg} kg</b> of mangoes with a budget of <b>${m.budget}฿</b>.<br>Starting price: ${cfg.startPrice}฿/kg. Target: <b>${Math.floor(m.budget / m.kg)}฿/kg</b> or less.</p>
     <ol>
-      <li><b>Type or tap the mic 🎤 to talk</b>, in <b>English only</b>. Som Sri is an AI and responds to what you say. Other languages confuse her, and she gets mad if you keep trying.</li>
+      <li><b>Type, or tap the mic 🎤 and talk</b> (your words appear in the chat box; press Enter or SEND to send them), in <b>English only</b>. Som Sri is an AI and responds to what you say. Other languages confuse her, and she gets mad if you keep trying.</li>
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
       <li><b>Lowball offers</b> and rudeness annoy her, and she won't drop the price. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
