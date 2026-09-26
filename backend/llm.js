@@ -2,7 +2,7 @@ import { buildSystemPrompt, buildUserPrompt } from './prompt.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
 const FIELDS = ['inner_thoughts', 'detected_language', 'npc_response', 'npc_mood', 'current_price', 'deal_closed', 'deal_failed', 'patience_change'];
-const TIMEOUT_MS = 30000;
+const TIMEOUT_MS = 8000; // per attempt; keeps the whole reply well under the browser's 20 s limit
 
 // JSON Schema used by Claude tool-use (forces structured output).
 const JSON_SCHEMA = {

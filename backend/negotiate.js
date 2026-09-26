@@ -91,7 +91,7 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
 
   let price = Math.round(Number(raw?.current_price));
   if (!Number.isFinite(price)) price = state.price;
-  price = Math.min(price, state.price + 10, cfg.maxPrice);
+  price = Math.min(price, state.price + 5, cfg.maxPrice); // a price bump is 5 baht at most
   price = Math.max(price, cfg.floorPrice);
 
   let npc_mood = MOODS.includes(raw?.npc_mood) ? raw.npc_mood : 'neutral';
@@ -102,9 +102,10 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   // If she already said yes to the buyer's previous offer, pushing for more gets at most 3 baht.
   const lastPlayer = [...history].reverse().find((h) => h.role === 'player' && !h.text.startsWith('('));
   const prevOffer = lastPlayer ? playerOffer(lastPlayer.text, cfg.maxPrice) : null;
-  if (prevOffer != null && prevOffer >= state.price) price = Math.max(price, state.price - 3);
-  // ...and only raise the price when she is actually annoyed.
-  if (price > state.price && (npc_mood === 'neutral' || npc_mood === 'happy')) price = state.price;
+  // (her asking price equals what they offered last time = she agreed to it)
+  if (prevOffer != null && prevOffer === state.price) price = Math.max(price, state.price - 3);
+  // ...and only raise the price when the player was genuinely rude (she's angry).
+  if (price > state.price && npc_mood !== 'angry') price = state.price;
 
   // Agreeing to an offer is not a sale: the buyer has to confirm.
   const deal_closed = raw?.deal_closed === true && isConfirmation(message, price, cfg.maxPrice);

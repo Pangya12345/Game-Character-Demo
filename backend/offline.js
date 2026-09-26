@@ -165,7 +165,8 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
   }
 
   let failed = false;
-  if (repeatLvl > 0 && !saysYes(message)) {
+  // insults end it at once, even if the words repeat something said before
+  if (repeatLvl > 0 && !saysYes(message) && !RE.severe.test(message)) {
     const level = repeatLvl;
     return {
       detected_language: lang,
