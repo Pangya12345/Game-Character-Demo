@@ -10,10 +10,7 @@
 
 ## วิธีรันบนเครื่อง
 
-โค้ดทั้งหมดอยู่ในโฟลเดอร์ `Huggle Market`
-
 ```bash
-cd "Huggle Market"
 npm install
 cp .env.example .env      # แล้วใส่ GEMINI_API_KEY (หรือ ANTHROPIC_API_KEY)
 npm run dev               # เปิด http://localhost:3000
@@ -92,19 +89,19 @@ LLM จะคิดใน `inner_thoughts` ก่อน แล้วจึงต
 ## Deploy (ได้ลิงก์ไปส่งให้เพื่อนเล่น)
 
 ### Vercel (ที่ใช้อยู่ตอนนี้)
-- **deploy ใหม่หลังแก้โค้ด:** รันคำสั่งนี้จากในโฟลเดอร์ `Huggle Market`
+- **deploy ใหม่หลังแก้โค้ด:** รันคำสั่งนี้ที่โฟลเดอร์หลักของโปรเจกต์
   ```bash
   npx vercel deploy --prod
   ```
 - **สร้างโปรเจกต์ใหม่จากหน้าเว็บ Vercel:**
-  - import repo นี้ แล้วตั้ง **Root Directory = `Huggle Market`**
+  - import repo นี้ (Root Directory ปล่อยเป็นค่าเริ่มต้น)
   - Framework Preset เลือก **Other**
   - ใส่ `GEMINI_API_KEY` ใน Environment Variables
 - **บน Vercel:** ไฟล์ใน `public/` จะเสิร์ฟเป็นหน้าเว็บ ส่วน `api/*.js` จะรันเป็น serverless function ที่เรียกใช้โค้ดใน `backend/`
 
 ### Render (ทางเลือก)
 1. สร้าง **Web Service** จาก repo นี้
-2. ตั้ง **Root Directory = `Huggle Market`**, Build = `npm install`, Start = `npm start` (ค่าอื่นดูได้จาก `render.yaml`)
+2. เลือก **New → Blueprint** แล้วเลือก repo นี้ ระบบจะอ่าน `render.yaml` ให้เอง (หรือสร้าง Web Service เอง: Build = `npm install`, Start = `npm start`)
 3. ใส่ `GEMINI_API_KEY` ใน Environment
 
 > อย่า commit ไฟล์ `.env` เด็ดขาด ไฟล์นี้อยู่ใน `.gitignore` แล้ว ให้ใส่ key ในหน้า dashboard ของ Vercel หรือ Render เท่านั้น
@@ -112,7 +109,7 @@ LLM จะคิดใน `inner_thoughts` ก่อน แล้วจึงต
 ## โครงสร้างโปรเจกต์
 
 ```
-Huggle Market/
+Game-Character-Demo/
 ├── api/                 # Vercel serverless functions
 │   ├── negotiate.js     #   POST /api/negotiate
 │   └── config.js        #   GET  /api/config
