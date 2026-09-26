@@ -2,6 +2,7 @@ services:
   - type: web
     name: haggle-market
     runtime: node
+    rootDir: Huggle Market # all the code lives in this folder
     plan: free
     buildCommand: npm install
     startCommand: npm start
