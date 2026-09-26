@@ -195,3 +195,30 @@ test('chatting alone never lowers the price; asking does', async () => {
   const chat = (await ask('สวัสดีครับป้า ป้าใจดีจังเลยครับ ผมเป็นนักศึกษา', { current_price: 120 })).json;
   assert.equal(chat.current_price, 120, 'no discount without asking');
 });
+
+test('offer parsing tells a comparison price from the player\'s own offer', () => {
+  assert.equal(playerOffer('ร้านข้าง ๆ ขาย 100 ถ้าเอา 5 โล 92 ได้มั้ย', 150), 92);
+  assert.equal(playerOffer('The stall over there sells them for 100, would you do 94?', 150), 94);
+  assert.equal(playerOffer('ร้านโน้นขาย 50', 150), 50, 'only a comparison: that is the price they are after');
+});
+
+test('discount words match whole words only', async () => {
+  const { asksForDiscount } = await import('../backend/rules.js');
+  assert.equal(asksForDiscount('no deal? can you knock some off', 150), true);
+  assert.equal(asksForDiscount('a little less please', 150), true);
+  assert.equal(asksForDiscount('do you want coffee', 150), false, '"off" inside coffee');
+  assert.equal(asksForDiscount('unless it is ripe', 150), false, '"less" inside unless');
+});
+
+test('source files contain no hidden control characters', async () => {
+  const fs = await import('node:fs');
+  for (const f of ['backend/rules.js', 'backend/negotiate.js', 'backend/prompt.js', 'backend/offline.js', 'backend/llm.js', 'public/js/game.js', 'public/js/scene.js']) {
+    const bad = [...fs.readFileSync(new URL(`../${f}`, import.meta.url))].filter((c) => c < 32 && ![9, 10, 13].includes(c));
+    assert.equal(bad.length, 0, `${f} has ${bad.length} control characters`);
+  }
+});
+
+test('a bare "cheaper please" earns 3 baht at most', async () => {
+  const r = (await ask('ลดหน่อย', { current_price: 120 })).json;
+  assert.ok(r.current_price >= 117, String(r.current_price));
+});

@@ -103,9 +103,12 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   const lastPlayer = [...history].reverse().find((h) => h.role === 'player' && !h.text.startsWith('('));
   const prevOffer = lastPlayer ? playerOffer(lastPlayer.text, cfg.maxPrice) : null;
   // (her asking price equals what they offered last time = she agreed to it)
-  if (prevOffer != null && prevOffer === state.price) price = Math.max(price, state.price - 5);
-  // A seasoned vendor gives ground slowly: at most 10 baht per turn, unless she's accepting their own offer.
-  if (price < state.price - 10 && price !== offer) price = state.price - 10;
+  if (prevOffer != null && prevOffer === state.price) price = Math.max(price, state.price - 3);
+  // A seasoned vendor gives ground slowly: at most 7 baht per turn, unless she's accepting their own offer,
+  // and a bare "cheaper?" with no reason, amount or offer earns 3 baht at most.
+  const plainAsk = offer == null && !/\d/.test(message) && message.length <= 25;
+  const maxStep = plainAsk ? 3 : 7;
+  if (price < state.price - maxStep && price !== offer) price = state.price - maxStep;
   // A real vendor doesn't cut the price just because you're chatting: they have to ask.
   // If the model cut it anyway, keep the price and swap in a friendly chat line so words and price agree.
   let chatOnly = false;

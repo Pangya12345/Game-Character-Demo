@@ -19,7 +19,7 @@ const LINES = {
   th: {
     rude: ['พูดจาดี ๆ หน่อยพ่อคุณ! ปากแบบนี้ป้าขึ้นเป็น {price} บาทเลย', 'โอ๊ย ปากเสียแบบนี้ไม่ขายให้ง่าย ๆ หรอก {price} บาท จะเอาไม่เอา!'],
     lowball: ['{offer} บาท?! ไปเก็บเองจากต้นไป๊! ต้นทุนป้ายังไม่พอเลย', 'ล้อเล่นใช่ไหม {offer} บาท ค่าน้ำมันรถป้ายังไม่พอเลยลูก!'],
-    acceptOffer: ['เฮ้อ... {price} บาทก็ได้ เห็นแก่ความน่ารักหรอกนะ จะเอาเลยไหมล่ะ?', 'ก็ได้ ๆ {price} บาท ตกลงเอาเลยไหมจ๊ะ ป้าจะได้ห่อให้', '{price} ก็ได้จ้ะ แล้วจะเอากี่โลล่ะ?'],
+    acceptOffer: ['เฮ้อ... {price} บาทก็ได้ เห็นแก่ความน่ารักหรอกนะ จะเอาเลยไหมล่ะ?', 'ก็ได้ ๆ {price} บาท ตกลงเอาเลยไหมจ๊ะ ป้าจะได้ห่อให้', 'เอาเถอะ {price} ก็ได้จ้ะ เอาเลยมั้ย?'],
     deal: ['ตกลงกิโลละ {price} บาทนะจ๊ะ เดี๋ยวป้าเลือกลูกสวย ๆ ให้เลย', 'ได้เลยจ้ะ {price} บาท หวานฉ่ำรับรอง กินแล้วต้องกลับมาอีก'],
     counter: [
       '{offer} ไม่ไหวหรอกหนู ป้าให้ {price} บาทละกัน ลดให้แล้วนะ',
@@ -58,7 +58,7 @@ const LINES = {
   en: {
     rude: ["Hey, watch your mouth! Now it's {price}.", "Wow, rude. Fine, {price}. Take it or leave it."],
     lowball: ['{offer} baht? Go pick them off the tree yourself!', "{offer}? That doesn't even cover my gas."],
-    acceptOffer: ["Ugh, fine. {price}. So, you want 'em?", "Okay, okay, {price}. Do we have a deal?", '{price} works. How many kilos you want?'],
+    acceptOffer: ["Ugh, fine. {price}. So, you want 'em?", "Okay, okay, {price}. Do we have a deal?", "Alright, {price}. Want 'em?"],
     deal: ["Deal. {price} a kilo. I'll pick out the good ones for you.", "{price} it is! You'll be back for more, trust me."],
     counter: [
       "{offer} is too low. I can do {price}. That's already a deal.",
@@ -143,7 +143,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     mood = 'happy';
     key = closed ? 'deal' : 'acceptOffer';
   } else if (offer != null) {
-    const step = Math.min(10, 2 + polite * 2 + charm * 2 + reason * 2 + (qty >= 3 ? 3 : qty >= 2 ? 1 : 0));
+    const step = Math.min(7, 1 + polite + charm + reason * 2 + (qty >= 3 ? 2 : qty >= 2 ? 1 : 0));
     const willing = Math.max(cfg.floorPrice, price - step);
     if (offer >= willing) {
       // she agrees to their price but the buyer still has to confirm
@@ -164,7 +164,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     mood = charm || polite ? 'happy' : 'neutral';
     key = 'chat';
   } else if (polite || charm || reason || qty >= 2) {
-    price = Math.max(cfg.floorPrice, price - Math.min(8, 2 + polite * 2 + charm * 2 + reason * 2 + (qty >= 3 ? 2 : 0)));
+    price = Math.max(cfg.floorPrice, price - Math.min(5, 1 + polite + charm + reason + (qty >= 3 ? 1 : 0)));
     mood = charm ? 'happy' : 'neutral';
     key = price === cfg.floorPrice ? 'floor' : 'soften';
   } else {
