@@ -656,6 +656,9 @@ function toggleListening() {
     heard = (finalText || interim).trim();
     const text = [typedBefore, heard].filter(Boolean).join(' ').slice(0, 280);
     els.input.value = text;
+    // follow along as you speak: keep the newest words in view, cursor at the end
+    els.input.scrollLeft = els.input.scrollWidth;
+    try { els.input.setSelectionRange(text.length, text.length); } catch { /* not focused */ }
     renderPlayerBubble(text, true);
     if (finalText) return finish();
     // No new words for a moment = you've stopped talking (quicker than the browser's own wait).
