@@ -37,6 +37,17 @@ export function playerOffer(message, maxPrice) {
   return total && qty ? Math.round(total.n / qty) : null;
 }
 
+// Only a price the player put forward themselves (not "the other stall sells for X").
+export function ownOffer(message, maxPrice) {
+  const offer = playerOffer(message, maxPrice);
+  if (offer == null) return null;
+  const onlyComparison = [...message.matchAll(/\d+/g)].every((m) => {
+    const n = parseInt(m[0], 10);
+    return n !== offer || COMPARE_CUE.test(message.slice(Math.max(0, m.index - 16), m.index));
+  });
+  return onlyComparison ? null : offer;
+}
+
 // Questions ask for something; they don't accept anything ("110 ได้ไหม?", "how about 100?").
 const QUESTION = /(\?|ไหม|มั้ย|หรือเปล่า|รึเปล่า|หรือยัง|\bhow about\b|\bwhat about\b|\bcould you\b|\bcan you\b|\bwould you\b|\bwill you\b)/i;
 

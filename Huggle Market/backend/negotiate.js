@@ -2,7 +2,7 @@
 import { getConfig } from './config.js';
 import { callAnthropic, callGemini } from './llm.js';
 import { chatLine, offlineReply, patienceOutLine } from './offline.js';
-import { asksForDiscount, dropKiloQuestion, isConfirmation, kiloQuestionDone, matchesLanguage, playerOffer } from './rules.js';
+import { asksForDiscount, dropKiloQuestion, isConfirmation, kiloQuestionDone, matchesLanguage, ownOffer, playerOffer } from './rules.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
 const MAX_MESSAGE = 280;
@@ -108,7 +108,8 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   // and a bare "cheaper?" with no reason, amount or offer earns 3 baht at most.
   const plainAsk = offer == null && !/\d/.test(message) && message.length <= 25;
   const maxStep = plainAsk ? 3 : 7;
-  if (price < state.price - maxStep && price !== offer) price = state.price - maxStep;
+  // (matching another stall's price isn't "accepting their offer": only the player's own number is exempt)
+  if (price < state.price - maxStep && price !== ownOffer(message, cfg.maxPrice)) price = state.price - maxStep;
   // A real vendor doesn't cut the price just because you're chatting: they have to ask.
   // If the model cut it anyway, keep the price and swap in a friendly chat line so words and price agree.
   let chatOnly = false;

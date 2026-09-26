@@ -232,3 +232,10 @@ test('the kilo question is not repeated', async () => {
   assert.equal(kiloQuestionDone([], 'ขอ 5 โลครับ'), true);
   assert.equal(kiloQuestionDone([], 'ลดหน่อย'), false);
 });
+
+test('another stall\'s price is not the player\'s own offer (no big jump)', async () => {
+  const { ownOffer } = await import('../backend/rules.js');
+  assert.equal(ownOffer('ร้านข้าง ๆ ขาย 105 ป้าลดให้หน่อย', 150), null);
+  assert.equal(ownOffer('ร้านข้าง ๆ ขาย 105 ขอ 100 ได้มั้ย', 150), 100);
+  assert.equal(ownOffer('Could you do 100?', 150), 100);
+});
