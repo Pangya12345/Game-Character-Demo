@@ -632,7 +632,6 @@ button { cursor: pointer; }
   .console { width: 100%; }
   .screen {
     aspect-ratio: auto;
-    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -658,24 +657,26 @@ button { cursor: pointer; }
     min-height: 0;
     margin: 6px 10px 0;
     padding: 12px 14px;
-    font-size: 15px;
+    font-size: 14px;
     border-width: 3px;
   }
-  .bubble p { max-height: 7.5em; }
+  .bubble p { max-height: 5.8em; }
   .bubble::before, .bubble::after { display: none; }
   .bubble.hidden { display: none; }
   .nametag { font-size: 11px; left: 10px; }
   .bubble.npc, .bubble.player { left: auto; right: auto; }
-  .bubble.player { align-self: flex-end; margin-left: 20%; }
+  /* on phones your words already show in the chat box, so skip the player's bubble to save space */
+  .bubble.player { display: none; }
   /* chat box sits at the bottom like a messaging app */
-  .chatbar { position: relative; height: 56px; padding: 0 10px; gap: 8px; border: 0; margin-top: auto; }
+  /* chat box right under her words, so scene + her reply + your typing all fit above the keyboard */
+  .chatbar { position: relative; height: 52px; padding: 0 10px; gap: 8px; border: 0; }
   .chatbar label { display: none; }
   .chatbar input { font-size: 16px; }
   .chatbar button { font-size: 13px; padding: 0 12px; }
   .chatbar button.mic { padding: 0; }
   .panel { width: 100%; font-size: 14px; padding: 16px; }
   .log { top: 8px; right: 8px; left: 8px; bottom: 8px; width: auto; font-size: 14px; }
-  .toast { font-size: 13px; top: auto; bottom: 72px; max-width: 90%; }
+  .toast { font-size: 13px; top: calc(56.25vw - 44px); max-width: 90%; }
   .footnote { display: none; }
 }
 

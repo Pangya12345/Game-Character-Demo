@@ -871,6 +871,14 @@ els.input.addEventListener('input', () => {
   S.lastKeyAt = performance.now();
   renderPlayerBubble(els.input.value, true);
 });
+// Phones: when the keyboard opens, keep the scene in view instead of scrolling it away.
+els.input.addEventListener('focus', () => {
+  if (window.innerWidth > 720) return;
+  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 300);
+});
+window.visualViewport?.addEventListener('resize', () => {
+  if (window.innerWidth <= 720 && document.activeElement === els.input) window.scrollTo({ top: 0 });
+});
 els.input.addEventListener('blur', () => {
   if (!S.busy && !els.input.value) renderPlayerBubble('', false);
 });
