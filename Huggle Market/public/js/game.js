@@ -939,20 +939,13 @@ function renderLog() {
   els.log.scrollTop = els.log.scrollHeight;
 }
 
-function toggleLog() {
-  renderLog();
-  els.log.classList.toggle('hidden');
-}
-
 /* ---------------- Controls ---------------- */
 
 const actions = {
-  log: toggleLog,
   hint: () => {
     const hints = L().hints;
     toast(`💡 ${hints[Math.floor(Math.random() * hints.length)]}`, 3500);
   },
-  mute: () => toast(sfx.toggleMute() ? '🔇 Sound off' : '🔊 Sound on', 1200),
   restart: () => (S.started ? startGame(S.lang, { newMission: true }) : showTitle()),
   menu: showTitle,
 };
