@@ -54,6 +54,9 @@
         <form class="chatbar" id="chatForm" autocomplete="off">
           <label for="chatInput" id="lblChat">Chat</label>
           <input id="chatInput" maxlength="280" enterkeyhint="send" disabled>
+          <button type="button" id="micBtn" class="mic" aria-label="Talk" aria-pressed="false" disabled>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1" width="5" height="9" rx="2.5" fill="currentColor"/><path d="M3 7.5a5 5 0 0 0 10 0M8 12.5V15M5.5 15h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
           <button type="submit" id="sendBtn" disabled>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 7.5 15 1 11 15 8 9.5zM8 9.5 15 1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
             <span>SEND</span>

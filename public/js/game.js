@@ -17,6 +17,7 @@ const els = {
   form: $('chatForm'),
   input: $('chatInput'),
   sendBtn: $('sendBtn'),
+  micBtn: $('micBtn'),
   toast: $('toast'),
   log: $('logPanel'),
   overlay: $('overlay'),
@@ -84,6 +85,12 @@ const T = {
     fallback: 'AI ไม่ตอบ ตอนนี้ใช้โหมดสำรองชั่วคราว',
     rateLimited: 'ส่งถี่เกินไป รอสักครู่นะ',
     wrongLang: 'โหมดภาษาไทย: พิมพ์เป็นภาษาไทยเท่านั้นนะ',
+    micLabel: 'กดแล้วพูด',
+    listeningPlaceholder: 'กำลังฟัง... พูดได้เลย',
+    micUnsupported: 'เบราว์เซอร์นี้ยังไม่รองรับการพูด ลองใช้ Chrome, Edge หรือ Safari นะ',
+    micDenied: 'ต้องอนุญาตให้ใช้ไมโครโฟนก่อนนะ',
+    micNoSpeech: 'ไม่ได้ยินเสียงเลย ลองพูดอีกครั้งนะ',
+    micError: 'ไมโครโฟนมีปัญหา ลองอีกครั้งนะ',
     // What she says when the player keeps typing in another language (index = strike - 1)
     // She can't understand the player. (p = price, n = a number she did catch, if any)
     wrongLangLines: [
@@ -180,6 +187,12 @@ const T = {
     fallback: 'AI is busy. Switched to offline mode.',
     rateLimited: 'Too many messages. Please wait a moment.',
     wrongLang: 'English mode: please type in English only.',
+    micLabel: 'Tap to talk',
+    listeningPlaceholder: 'Listening... go ahead',
+    micUnsupported: "Voice input isn't supported in this browser. Try Chrome, Edge or Safari.",
+    micDenied: 'Please allow microphone access.',
+    micNoSpeech: "Didn't catch that. Try again.",
+    micError: 'Microphone error. Please try again.',
     wrongLangLines: [
       (p, n) => (n ? `${n}? I got the number, but that's it. Can you say it in English?` : pick([
         "Sorry, what? What language is that? I didn't get a word.",
@@ -271,6 +284,8 @@ function applyLang() {
   $('lblPrice').textContent = L().price;
   $('lblChat').textContent = L().chat;
   els.nametag.textContent = L().vendorName;
+  els.micBtn.title = L().micLabel;
+  els.micBtn.setAttribute('aria-label', L().micLabel);
   renderWallet();
   els.input.placeholder = L().placeholder;
   setMood(S.mood);
@@ -397,7 +412,7 @@ setInterval(() => {
   const now = performance.now();
   const dt = (now - lastTick) / 1000;
   lastTick = now;
-  const running = S.started && !S.over && !S.busy && !S.typing && !document.hidden && els.log.classList.contains('hidden');
+  const running = S.started && !S.over && !S.busy && !S.typing && !listening && !document.hidden && els.log.classList.contains('hidden');
   document.querySelector('.timer').classList.toggle('paused', !running);
   if (!running) return;
 
@@ -494,6 +509,8 @@ async function onWrongLanguage(text) {
 function setInputEnabled(on) {
   els.input.disabled = !on;
   els.sendBtn.disabled = !on;
+  els.micBtn.disabled = !on;
+  if (!on) stopListening(true);
 }
 
 async function send() {
@@ -556,6 +573,81 @@ async function send() {
   }
 }
 
+/* ---------------- Voice input ---------------- */
+
+// Speech-to-text built into the browser (Chrome, Edge, Safari). Free, no API key.
+// Thai mode listens for Thai (th-TH), English mode for English (en-US).
+// What you say appears live in the chat box, and is sent when you stop talking.
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognizer = null;
+let listening = false;
+
+function setListening(on) {
+  listening = on;
+  els.micBtn.classList.toggle('listening', on);
+  els.micBtn.setAttribute('aria-pressed', String(on));
+  els.input.placeholder = on ? L().listeningPlaceholder : L().placeholder;
+}
+
+function stopListening(discard = false) {
+  if (!recognizer) return;
+  if (discard) recognizer.abort();
+  else recognizer.stop();
+}
+
+function toggleListening() {
+  if (listening) return stopListening();
+  if (!Recognition) return toast(L().micUnsupported, 4000);
+  if (!S.started || S.over || S.busy) return;
+
+  const rec = new Recognition();
+  rec.lang = S.lang === 'th' ? 'th-TH' : 'en-US';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+  const typedBefore = els.input.value.trim();
+  const gen = S.gen;
+  let heard = '';
+  let aborted = false;
+
+  rec.onresult = (e) => {
+    let finalText = '';
+    let interim = '';
+    for (const r of e.results) {
+      if (r.isFinal) finalText += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    heard = (finalText || interim).trim();
+    const text = [typedBefore, heard].filter(Boolean).join(' ').slice(0, 280);
+    els.input.value = text;
+    renderPlayerBubble(text, true);
+  };
+  rec.onerror = (e) => {
+    if (e.error === 'aborted') aborted = true;
+    else if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast(L().micDenied, 4000);
+    else if (e.error === 'no-speech') toast(L().micNoSpeech, 2500);
+    else toast(L().micError, 2500);
+  };
+  rec.onend = () => {
+    if (recognizer === rec) recognizer = null;
+    setListening(false);
+    resetIdle(); // she was listening; the patience clock restarts from when you stopped talking
+    if (!aborted && heard && gen === S.gen && S.started && !S.over && !S.busy) send();
+  };
+
+  try {
+    rec.start();
+    recognizer = rec;
+    setListening(true);
+    sfx.tick();
+  } catch {
+    setListening(false);
+    toast(L().micError, 2500);
+  }
+}
+
+els.micBtn.addEventListener('click', toggleListening);
+
 /* ---------------- Game flow ---------------- */
 
 function grade(price) {
@@ -575,6 +667,7 @@ function hideOverlay() {
 }
 
 function showTitle() {
+  stopListening(true);
   finishTyping();
   S.gen += 1;
   S.busy = false;
@@ -598,7 +691,7 @@ const RULES = {
     <h2>กติกาการเล่น</h2>
     <p class="mission">ภารกิจ: คุณมีเงิน <b>${m.budget} บาท</b> ต้องซื้อมะม่วง <b>${m.kg} กิโล</b><br>ราคาเริ่มต้นกิโลละ ${cfg.startPrice} บาท ต้องต่อให้เหลือไม่เกิน <b>${Math.floor(m.budget / m.kg)} บาท/กก.</b></p>
     <ol>
-      <li><b>พิมพ์คุยได้อิสระ</b> แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ (<b>พิมพ์ภาษาไทยเท่านั้น</b> ถ้าพิมพ์ภาษาอื่นแม่ค้าจะงง ถ้าบ่อย ๆ จะโกรธ)</li>
+      <li><b>พิมพ์หรือกดปุ่มไมค์ 🎤 เพื่อพูด</b> คุยได้อิสระ แม่ค้าเป็น AI ที่คิดและตอบตามสิ่งที่คุณพูดจริง ๆ (<b>พิมพ์ภาษาไทยเท่านั้น</b> ถ้าพิมพ์ภาษาอื่นแม่ค้าจะงง ถ้าบ่อย ๆ จะโกรธ)</li>
       <li><b>วิธีได้ส่วนลด:</b> พูดสุภาพ ให้เหตุผลที่น่าเชื่อ ซื้อหลายกิโล อ้อนหรือชวนคุย ใช้เทคนิคต่อรอง</li>
       <li><b>แม่ค้าจะหงุดหงิดและไม่ลดให้</b> ถ้าต่อต่ำเกินเหตุ (เช่น 10 บาท) หรือพูดไม่ดี ถ้า<b>ด่าหรือพูดหยาบคายมาก ๆ = ดีลล่มทันที!</b></li>
       <li>แม่ค้า<b>จำได้</b>ว่าคุยอะไรกันไปแล้ว ใช้มุกเดิมซ้ำไม่ได้ผล <b>ถามคำถามเดิมซ้ำ ๆ แม่ค้าจะรำคาญ ถ้ายังไม่หยุดจะดีลล่ม!</b> และแม่ค้าไม่รู้ว่าคุณมีเงินเท่าไร ถ้าคุณไม่บอก</li>
@@ -614,7 +707,7 @@ const RULES = {
     <h2>HOW TO PLAY</h2>
     <p class="mission"><b>OBJECTIVE:</b> Buy <b>${m.kg} kg</b> of mangoes with a budget of <b>${m.budget}฿</b>.<br>Starting price: ${cfg.startPrice}฿/kg. Target: <b>${Math.floor(m.budget / m.kg)}฿/kg</b> or less.</p>
     <ol>
-      <li><b>Chat freely</b> in <b>English only</b>. Som Sri is an AI and responds to what you say. Other languages confuse her, and she gets mad if you keep trying.</li>
+      <li><b>Type or tap the mic 🎤 to talk</b>, in <b>English only</b>. Som Sri is an AI and responds to what you say. Other languages confuse her, and she gets mad if you keep trying.</li>
       <li><b>Get discounts</b> by being polite, giving good reasons, buying more, or using haggling tactics.</li>
       <li><b>Lowball offers</b> and rudeness annoy her, and she won't drop the price. <b>Insults end the deal immediately.</b></li>
       <li><b>She remembers everything.</b> Repeated tricks won't work. <b>Keep asking the same thing and she gets annoyed, then ends the deal.</b> She doesn't know your budget unless you tell her.</li>
@@ -658,6 +751,7 @@ async function startGame(lang, { newMission = false } = {}) {
 
 // result: 'win' | 'lose' | 'broke' (price agreed but the player can't afford it) | 'kicked' (silent too long)
 function endGame(result) {
+  stopListening(true);
   S.over = true;
   setInputEnabled(false);
   const saved = cfg.startPrice - S.price;
