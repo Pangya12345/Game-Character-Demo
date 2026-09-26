@@ -141,7 +141,7 @@ test('patience: polite talk raises it, annoying talk lowers it', async () => {
   const nice = (await ask('สวัสดีครับป้า ป้าใจดีจังเลยครับ ผมเป็นนักศึกษา ขอลดหน่อยได้ไหมครับ', { patience: 60 })).json;
   assert.ok(nice.patience > 60, `polite: ${nice.patience}`);
   const low = (await ask('ขอ 10 บาท', { patience: 60 })).json;
-  assert.ok(low.patience <= 48, `lowball: ${low.patience}`);
+  assert.ok(low.patience <= 54, `lowball: ${low.patience}`);
   assert.ok(nice.patience <= 100 && low.patience >= 0);
 });
 
@@ -164,7 +164,7 @@ test('patience: running out ends the deal with a matching line', async () => {
 test('patience: repeats drain it harder each time', async () => {
   const h = [{ role: 'player', text: 'ลดหน่อยได้ไหม' }];
   const r = (await ask('ลดหน่อยได้ไหม', { patience: 80, day_seed: 2 }, h)).json;
-  assert.ok(r.patience <= 66, String(r.patience));
+  assert.ok(r.patience <= 70, String(r.patience));
 });
 
 test('patience: a closed deal never loses patience', async () => {
@@ -180,4 +180,15 @@ test('Thai numerals mixed with English words still count as Thai', async () => {
   assert.equal(d.status, 200, 'Thai digits are Thai script');
   const e = await ask('ok ๑๐๐', { lang: 'en' });
   assert.equal(e.json.error, 'wrong_language');
+});
+
+test('chatting alone never lowers the price; asking does', async () => {
+  const { asksForDiscount } = await import('../backend/rules.js');
+  assert.equal(asksForDiscount('ผมจะซื้อไปฝากแม่ครับ', 150), false);
+  assert.equal(asksForDiscount("I'm a college student", 150), false);
+  assert.equal(asksForDiscount('ขอลดหน่อยได้มั้ยครับ', 150), true);
+  assert.equal(asksForDiscount('Any chance of a discount?', 150), true);
+  assert.equal(asksForDiscount('95 ได้มั้ย', 150), true);
+  const chat = (await ask('สวัสดีครับป้า ป้าใจดีจังเลยครับ ผมเป็นนักศึกษา', { current_price: 120 })).json;
+  assert.equal(chat.current_price, 120, 'no discount without asking');
 });

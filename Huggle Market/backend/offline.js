@@ -1,4 +1,4 @@
-import { playerOffer, saysYes } from './rules.js';
+import { asksForDiscount, playerOffer, saysYes } from './rules.js';
 
 // Rule-based stand-in for the LLM. Used when no API key is configured, or when the API call fails,
 // so the game is always playable. It is intentionally simpler than the real AI.
@@ -42,6 +42,7 @@ const LINES = {
       'ถามราคาเฉย ๆ ป้าก็ตอบเหมือนเดิมแหละ {price} จ้ะ',
     ],
     floor: ['{price} บาทนี่ต่ำสุดแล้วจริง ๆ ลดกว่านี้ป้าไม่มีกินแล้ว'],
+    chat: ['ขอบใจจ้ะ มะม่วงป้าหวานจริงนะ ว่าแต่จะเอาสักกี่โลดีล่ะ?', 'อืม... ดีจังเลยจ้ะ ถ้าชอบก็ลองเลือกดูได้นะลูก', 'จ้ะ ๆ ป้าฟังอยู่ อยากได้กี่โลก็บอกป้านะ'],
     final: ['คุยวนไปวนมาป้าเหนื่อยแล้ว วันนี้ไม่ขายแล้วจ้ะ ไปเถอะไป'],
     severe: ['ปากหมาแบบนี้ป้าไม่ขายให้หรอก! ไปให้พ้นเลย ไป๊!', 'ด่าคนแก่แบบนี้ได้ยังไง! ไม่ขายแล้ว ไปซื้อที่อื่นไป!'],
     // her patience ran out
@@ -80,6 +81,7 @@ const LINES = {
       'Same question, same answer: {price}.',
     ],
     floor: ["{price} is really as low as I go. Any lower and I don't eat tonight."],
+    chat: ["Aw, thanks! They really are sweet. How many kilos are you thinking?", "Oh, that's nice. Take a look, pick whichever you like.", "Haha, I hear you. Just tell me how many you need."],
     final: ["We keep going in circles. I'm tired. No sale today."],
     severe: ["With that mouth? No way I'm selling to you. Get outta here!", "Don't you talk to me like that! No sale. Go!"],
     patienceOut: ["That's it, I'm out of patience. No sale. Go buy somewhere else.", "I'm done. Seriously, I'm done. No sale today."],
@@ -132,7 +134,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     mood = 'angry';
     key = 'rude';
   } else if (offer != null && offer < cfg.floorPrice * 0.7) {
-    mood = 'angry';
+    mood = 'stressed';
     key = 'lowball';
   } else if (offer != null && offer >= price) {
     // offering the asking price (or more) and saying yes = sale; otherwise she asks to confirm
@@ -140,7 +142,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     mood = 'happy';
     key = closed ? 'deal' : 'acceptOffer';
   } else if (offer != null) {
-    const step = Math.min(10, 2 + polite * 3 + charm * 2 + reason * 2 + (qty >= 3 ? 3 : qty >= 2 ? 1 : 0));
+    const step = Math.min(12, 3 + polite * 3 + charm * 3 + reason * 3 + (qty >= 3 ? 3 : qty >= 2 ? 2 : 0));
     const willing = Math.max(cfg.floorPrice, price - step);
     if (offer >= willing) {
       // she agrees to their price but the buyer still has to confirm
@@ -156,8 +158,12 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     closed = true;
     mood = 'happy';
     key = 'deal';
+  } else if (!asksForDiscount(message, cfg.maxPrice)) {
+    // just chatting: be friendly, but no discount until they ask
+    mood = charm || polite ? 'happy' : 'neutral';
+    key = 'chat';
   } else if (polite || charm || reason || qty >= 2) {
-    price = Math.max(cfg.floorPrice, price - Math.min(6, 1 + polite * 2 + charm * 2 + reason + (qty >= 3 ? 2 : 0)));
+    price = Math.max(cfg.floorPrice, price - Math.min(8, 2 + polite * 2 + charm * 2 + reason * 2 + (qty >= 3 ? 2 : 0)));
     mood = charm ? 'happy' : 'neutral';
     key = price === cfg.floorPrice ? 'floor' : 'soften';
   } else {
@@ -175,7 +181,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
       current_price: state.price,
       deal_closed: false,
       deal_failed: level >= 4,
-      patience_change: -(8 + 6 * level),
+      patience_change: -(5 + 5 * level),
     };
   }
   if (RE.severe.test(message)) {
@@ -193,7 +199,7 @@ export function offlineReply({ cfg, message, state, history = [], repeatLvl = 0 
     deal_closed: closed,
     deal_failed: failed,
     // rough guess of how the message felt to her
-    patience_change: failed ? -100 : key === 'rude' ? -25 : key === 'lowball' ? -15 : key === 'grumble' ? -3
-      : Math.min(12, polite * 4 + charm * 5 + reason * 3),
+    patience_change: failed ? -100 : key === 'rude' ? -18 : key === 'lowball' ? -8 : key === 'grumble' ? -2
+      : Math.min(12, 1 + polite * 4 + charm * 5 + reason * 3),
   };
 }

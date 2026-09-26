@@ -453,7 +453,7 @@ async function npcSay(text) {
 // One meter (0-100) like a real person's patience. It drains while you're silent or typing
 // without sending, drops when you annoy her, grows a little when you're nice, and at 0 she
 // sends you away. It pauses while she's talking or listening to you.
-const PATIENCE_DRAIN = 1; // per second of silence (100 -> 0 in about 100 s)
+const PATIENCE_DRAIN = 0.75; // per second of silence (100 -> 0 in about 130 s)
 // While you're actively typing she waits more patiently: everything runs at about a third of the speed.
 const TYPING_SLOWDOWN = 0.35;
 const TYPING_GRACE_MS = 4000; // counts as "typing" if a key was pressed in the last 4 s
@@ -500,12 +500,12 @@ function resetIdle() {
 // random but depends on how much patience she has left, and she doesn't do the same thing twice in a row.
 function pickIdleReaction() {
   const p = S.patience;
-  const canSweeten = !S.sweetened && S.price >= 100; // a "decide now" discount, once per game
+  const canSweeten = !S.sweetened && S.price >= 95; // a "decide now" discount, once per game
   const weights = p > 60
-    ? { nudge: 3, busy: 3, freebie: 1.5, sweeten: canSweeten ? 1 : 0, raise: 1, packup: 0 }
+    ? { nudge: 3, busy: 3, freebie: 2, sweeten: canSweeten ? 2 : 0, raise: 0.5, packup: 0 }
     : p > 30
-      ? { nudge: 1, busy: 2, freebie: 1, sweeten: canSweeten ? 0.5 : 0, raise: 3, packup: 1 }
-      : { nudge: 0, busy: 1, freebie: 0, sweeten: 0, raise: 2, packup: 3 };
+      ? { nudge: 2, busy: 2, freebie: 1.5, sweeten: canSweeten ? 1.5 : 0, raise: 1.5, packup: 1 }
+      : { nudge: 1, busy: 1, freebie: 0.5, sweeten: 0, raise: 1.5, packup: 3 };
   if (S.lastIdle) weights[S.lastIdle] = 0;
   const total = Object.values(weights).reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
@@ -567,7 +567,7 @@ async function onWrongLanguage(text) {
   await new Promise((r) => setTimeout(r, 500 + Math.random() * 500));
   if (gen !== S.gen) return;
   if (n === 1) toast(L().wrongLang, 3000);
-  setPatience(S.patience - [12, 15, 20, 25, 30][Math.min(n, 5) - 1]);
+  setPatience(S.patience - [8, 10, 14, 18, 24][Math.min(n, 5) - 1]);
   if (S.patience <= 0 || n > lines.length) {
     S.busy = false;
     return runOutOfPatience(L().wrongLangKick, L().langKickedMsg);

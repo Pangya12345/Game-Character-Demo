@@ -2,7 +2,7 @@
 import { getConfig } from './config.js';
 import { callAnthropic, callGemini } from './llm.js';
 import { offlineReply, patienceOutLine } from './offline.js';
-import { isConfirmation, matchesLanguage, playerOffer } from './rules.js';
+import { asksForDiscount, isConfirmation, matchesLanguage, playerOffer } from './rules.js';
 
 const MOODS = ['neutral', 'happy', 'angry', 'stressed'];
 const MAX_MESSAGE = 280;
@@ -103,7 +103,9 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   const lastPlayer = [...history].reverse().find((h) => h.role === 'player' && !h.text.startsWith('('));
   const prevOffer = lastPlayer ? playerOffer(lastPlayer.text, cfg.maxPrice) : null;
   // (her asking price equals what they offered last time = she agreed to it)
-  if (prevOffer != null && prevOffer === state.price) price = Math.max(price, state.price - 3);
+  if (prevOffer != null && prevOffer === state.price) price = Math.max(price, state.price - 5);
+  // A real vendor doesn't cut the price just because you're chatting: they have to ask.
+  if (price < state.price && !asksForDiscount(message, cfg.maxPrice) && raw?.deal_closed !== true) price = state.price;
   // ...and only raise the price when the player was genuinely rude (she's angry).
   if (price > state.price && npc_mood !== 'angry') price = state.price;
 
@@ -123,11 +125,11 @@ function sanitizeResult(raw, { cfg, message, state, history = [], repeatLvl = 0 
   // ---- Patience (0-100): one meter for everything that wears her down or wins her over ----
   let change = Math.round(Number(raw?.patience_change));
   if (!Number.isFinite(change)) change = 0;
-  // one message can cost at most 40, unless she refuses to sell over it (insults can empty it)
-  change = Math.max(deal_failed ? -100 : -40, Math.min(12, change));
-  if (offer != null && offer < cfg.floorPrice * 0.65) change = Math.min(change, -12); // silly lowball
-  if (repeatLvl > 0) change = Math.min(change, -(8 + 6 * repeatLvl)); // asking the same thing again
-  if (npc_mood === 'angry') change = Math.min(change, -10);
+  // one message can cost at most 30, unless she refuses to sell over it (insults can empty it)
+  change = Math.max(deal_failed ? -100 : -30, Math.min(12, change));
+  if (offer != null && offer < cfg.floorPrice * 0.65) change = Math.min(change, -6); // silly lowball
+  if (repeatLvl > 0) change = Math.min(change, -(5 + 5 * repeatLvl)); // asking the same thing again
+  if (npc_mood === 'angry') change = Math.min(change, -8);
   let patience = Math.max(0, Math.min(100, state.patience + change));
   if (deal_closed) patience = Math.max(patience, state.patience);
   if (repeatLvl >= 4) patience = 0; // asked the same thing after her final warning
@@ -190,7 +192,7 @@ export async function negotiate(body, ip = 'unknown') {
   if (!matchesLanguage(typed, state.lang)) return { status: 400, json: { error: 'wrong_language', expected: state.lang } };
   const history = sanitizeHistory(body.history);
   const repeatLvl = repeatLevel(countRepeats(message, history), repeatLimit(state.daySeed));
-  const ctx = { cfg, message, state, history, repeatLvl };
+  const ctx = { cfg, message, state, history, repeatLvl, asked: asksForDiscount(message, cfg.maxPrice) };
 
   let raw = null;
   let mode = cfg.provider;

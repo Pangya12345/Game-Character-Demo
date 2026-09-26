@@ -34,6 +34,11 @@ export function playerOffer(message, maxPrice) {
 const QUESTION = /(\?|ไหม|มั้ย|หรือเปล่า|รึเปล่า|หรือยัง|\bhow about\b|\bwhat about\b|\bcould you\b|\bcan you\b|\bwould you\b|\bwill you\b)/i;
 
 // Scripted fallback: does the message clearly say "yes, I'll buy"?
+// Is the player actually asking for a lower price (or making an offer) in this message?
+// Just chatting ("I'm buying for my mom") is not asking, so the price shouldn't move.
+const ASK = /(ลด|ถูกกว่า|ถูกลง|ถูก ๆ|ถูกๆ|ต่อราคา|ต่อหน่อย|ต่อได้|แพง|ส่วนลด|แถม|discount|cheap|lower|less|deal|too (much|expensive|pricey)|expensive|pricey|best price|knock|come down|go down|off|budget|can'?t afford)/i;
+export const asksForDiscount = (message, maxPrice) => playerOffer(message, maxPrice) != null || ASK.test(message);
+
 export const saysYes = (message) =>
   (CONFIRM.test(message) || /เอา\s*(\d+\s*(บาท)?\s*)?(นะ|ครับ|ค่ะ|คะ|จ้ะ|จ้า|เลย|ก็ได้|ละ|แล้ว)/.test(message)) &&
   !REFUSE.test(message) && !QUESTION.test(message);
